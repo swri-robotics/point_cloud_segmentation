@@ -4,9 +4,11 @@ project(point_cloud_segmentation)
 add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
+  pcl_conversions
+  pcl_ros
   roscpp
   sensor_msgs
-  pcl_ros
   )
 
 #find_package(PCL 1.8 REQUIRED)
@@ -17,7 +19,10 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pc_masker
   CATKIN_DEPENDS
+  cv_bridge
+  pcl_conversions
   pcl_ros
+  roscpp
   sensor_msgs
 #  DEPENDS
 )

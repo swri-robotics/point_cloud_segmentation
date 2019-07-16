@@ -9,8 +9,10 @@
   <license>Apache 2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
   <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>pcl_ros</depend>
+  <depend>cv_bridge</depend>
 
 </package>
