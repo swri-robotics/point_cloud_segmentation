@@ -44,6 +44,8 @@ private:
   ros::Publisher debug_extracted_image_pub_;
   /** @brief Publisher used for masked image when debug_publisher_=true*/
   ros::Publisher debug_masked_image_pub_;
+  /** @brief Service client used to process the image */
+  ros::ServiceClient image_processing_client_;
 };
 
 }  // namespace pc_segmentation

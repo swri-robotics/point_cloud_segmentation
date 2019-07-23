@@ -5,6 +5,7 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
+  message_generation
   pcl_conversions
   pcl_ros
   roscpp
@@ -14,12 +15,22 @@ find_package(catkin REQUIRED COMPONENTS
 #find_package(PCL 1.8 REQUIRED)
 find_package(OpenCV 3 REQUIRED)
 
+add_service_files(
+  FILES
+    ImageProcessing.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+    sensor_msgs
+)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pc_masker
   CATKIN_DEPENDS
   cv_bridge
+  message_runtime
   pcl_conversions
   pcl_ros
   roscpp
@@ -41,10 +52,12 @@ include_directories(
  add_library(pc_masker
    src/${PROJECT_NAME}/pc_masker.cpp
  )
+add_dependencies(pc_masker ${pc_masker_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} point_cloud_segmentation_generate_messages_cpp)
 target_link_libraries(pc_masker
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${OpenCV_LIBRARIES})
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -53,7 +66,7 @@ target_link_libraries(pc_masker
 
 ## Declare a C++ executable
 add_executable(pc_masker_node src/pc_masker_node.cpp)
-add_dependencies(pc_masker_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(pc_masker_node ${pc_masker_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} point_cloud_segmentation_generate_messages_cpp)
 target_link_libraries(pc_masker_node pc_masker ${catkin_LIBRARIES})
 
 #############

@@ -1,5 +1,6 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
+#include <point_cloud_segmentation/ImageProcessing.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -16,10 +17,13 @@ namespace pc_segmentation
 PCMasker::PCMasker(ros::NodeHandle nh, const std::string& sub_topic, const std::string& pub_topic)
   : point_cloud_sub_topic_(sub_topic), masked_point_cloud_pub_topic_(pub_topic), nh_(nh)
 {
-  point_cloud_sub_ = nh.subscribe(point_cloud_sub_topic_, 1, &PCMasker::newPCCallback, this);
-  masked_point_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>(masked_point_cloud_pub_topic_, 1);
-  debug_extracted_image_pub_ = nh.advertise<sensor_msgs::Image>("extracted_image_debug", 1);
-  debug_masked_image_pub_ = nh.advertise<sensor_msgs::Image>("masked_image_debug", 1);
+  point_cloud_sub_ = nh_.subscribe(point_cloud_sub_topic_, 1, &PCMasker::newPCCallback, this);
+  masked_point_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(masked_point_cloud_pub_topic_, 1);
+  debug_extracted_image_pub_ = nh_.advertise<sensor_msgs::Image>("extracted_image_debug", 1);
+  debug_masked_image_pub_ = nh_.advertise<sensor_msgs::Image>("masked_image_debug", 1);
+
+  ros::service::waitForService("/mask_generator");
+  image_processing_client_ = nh_.serviceClient<point_cloud_segmentation::ImageProcessing>("/mask_generator");
 
   ROS_INFO("Subscribing to %s", point_cloud_sub_.getTopic().c_str());
   ROS_INFO("Publishing on %s", masked_point_cloud_pub_.getTopic().c_str());
@@ -27,7 +31,7 @@ PCMasker::PCMasker(ros::NodeHandle nh, const std::string& sub_topic, const std::
 
 void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
 {
-  // Extract RGB Image from cloud
+  // -------  Extract RGB Image from cloud ----------
   cv::Mat depth_image;
   cv::Mat image;
   pc_segmentation::cloudToImage(scan, depth_image, image);
@@ -37,21 +41,32 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
     cv::imshow("window", image);
     cv::waitKey(1000);
   }
+
+  cv_bridge::CvImage debug_msg;
+  debug_msg.header.frame_id = scan->header.frame_id;
+  debug_msg.header.seq = scan->header.seq;
+  pcl_conversions::fromPCL(scan->header.stamp, debug_msg.header.stamp);
+  debug_msg.header.stamp = ros::Time::now();
+  debug_msg.encoding = sensor_msgs::image_encodings::TYPE_8UC3;
+  debug_msg.image = image;
   if (debug_publisher_)
   {
-    cv_bridge::CvImage debug_msg;
-    debug_msg.header.frame_id = scan->header.frame_id;
-    debug_msg.header.seq = scan->header.seq;
-    pcl_conversions::fromPCL(scan->header.stamp, debug_msg.header.stamp);
-    debug_msg.header.stamp = ros::Time::now();
-    debug_msg.encoding = sensor_msgs::image_encodings::TYPE_8UC3;
-    debug_msg.image = image;
     debug_extracted_image_pub_.publish(debug_msg.toImageMsg());
   }
 
-  // Extract pixel mask from RGB image
+  // --------- Extract pixel mask from RGB image ---------------
   cv::Mat mask;
-  pc_segmentation::thresholdingMaskDetector(image, mask);
+  // Uncomment to use HSV thresholding instead
+  //  pc_segmentation::thresholdingMaskDetector(image, mask);
+
+  // Call histogram backprojection processing service
+  point_cloud_segmentation::ImageProcessing srv;
+  srv.request.input_image = *debug_msg.toImageMsg();
+  image_processing_client_.call(srv);
+
+  // Convert response back into single channel, binary CV Mat
+  auto mask_ptr = cv_bridge::toCvCopy(srv.response.returned_image, sensor_msgs::image_encodings::TYPE_8UC1);
+  mask = mask_ptr->image;
 
   if (debug_viewer_)
   {
@@ -93,7 +108,7 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
   cv::Mat in[] = { mask, mask, mask };
   cv::merge(in, 3, mask_3channel);
 
-  // Apply mask to the depth image
+  // ---------- Apply mask to the depth image --------------
   cv::Mat masked_depth_image;
   applyMask(depth_image, mask_3channel, masked_depth_image);
 
