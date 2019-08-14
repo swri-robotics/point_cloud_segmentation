@@ -99,8 +99,8 @@ target_link_libraries(pc_masker_node pc_masker ${catkin_LIBRARIES})
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
  install(FILES
-   /launch/demo.launch
-   /config/demo.rviz
+   launch/demo.launch
+   config/demo.rviz
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
  )
 
