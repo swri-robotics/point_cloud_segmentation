@@ -62,6 +62,10 @@ add_executable(pc_masker_node src/pc_masker_node.cpp)
 add_dependencies(pc_masker_node ${pc_masker_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} point_cloud_segmentation_generate_messages_cpp)
 target_link_libraries(pc_masker_node pc_masker ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_hsv_thresholding_node src/hsv_thresholding_node.cpp)
+add_dependencies(${PROJECT_NAME}_hsv_thresholding_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_hsv_thresholding_node ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############

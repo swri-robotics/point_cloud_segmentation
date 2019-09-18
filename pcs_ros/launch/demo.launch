@@ -18,9 +18,10 @@
 
   <node pkg="pcs_ros" type="pc_masker_node" name="pc_masker_node" output="screen" >
     <param name="debug_viewer" value="false" />
-    <param name="debug_publisher" value="true" />
+    <param name="debug_publisher" value="false" />
   </node>
 
+  <node pkg="pcs_ros" type="pcs_ros_hsv_thresholding_node" name="hsv_threshold_node" output="screen" />
   <!-- Visualization -->
   <node if="$(arg viz)" name="rviz" type="rviz" pkg="rviz" args="-d $(find pcs_ros)/config/demo.rviz" output="screen"/>
 

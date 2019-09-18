@@ -14,6 +14,8 @@
 
 namespace pc_segmentation
 {
+static const std::string SERVICE_NAME = "/perform_detection";
+
 PCMasker::PCMasker(ros::NodeHandle nh, const std::string& sub_topic, const std::string& pub_topic)
   : point_cloud_sub_topic_(sub_topic), masked_point_cloud_pub_topic_(pub_topic), nh_(nh)
 {
@@ -22,8 +24,8 @@ PCMasker::PCMasker(ros::NodeHandle nh, const std::string& sub_topic, const std::
   debug_extracted_image_pub_ = nh_.advertise<sensor_msgs::Image>("extracted_image_debug", 1);
   debug_masked_image_pub_ = nh_.advertise<sensor_msgs::Image>("masked_image_debug", 1);
 
-  ros::service::waitForService("/mask_generator");
-  image_processing_client_ = nh_.serviceClient<pcs_msgs::ImageProcessing>("/mask_generator");
+  ros::service::waitForService(SERVICE_NAME);
+  image_processing_client_ = nh_.serviceClient<pcs_msgs::ImageProcessing>(SERVICE_NAME);
 
   ROS_INFO("Subscribing to %s", point_cloud_sub_.getTopic().c_str());
   ROS_INFO("Publishing on %s", masked_point_cloud_pub_.getTopic().c_str());
@@ -55,41 +57,34 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
   }
 
   // --------- Extract pixel mask from RGB image ---------------
-  cv::Mat mask;
-  // Uncomment to use HSV thresholding instead
-  //  pc_segmentation::thresholdingMaskDetector(image, mask);
-
-  // Call histogram backprojection processing service
+  // Call image processing service
   pcs_msgs::ImageProcessing srv;
   srv.request.input_image = *debug_msg.toImageMsg();
-  image_processing_client_.call(srv);
+  if (!image_processing_client_.call(srv))
+  {
+    ROS_ERROR("Image processing service call failed");
+    return;
+  }
 
-  // Convert response back into single channel, binary CV Mat
-  auto mask_ptr = cv_bridge::toCvCopy(srv.response.returned_image, sensor_msgs::image_encodings::TYPE_8UC1);
-  mask = mask_ptr->image;
+  // Convert response back into, binary CV Mat
+  auto mask_ptr = cv_bridge::toCvCopy(srv.response.returned_image, sensor_msgs::image_encodings::TYPE_8UC3);
+  cv::Mat mask = mask_ptr->image;
 
   if (debug_viewer_)
   {
     imshow("window", mask * 255);
     cv::waitKey(1000);
 
-    cv::Mat mask_3channel;
-    cv::Mat in[] = { mask, mask, mask };
-    cv::merge(in, 3, mask_3channel);
     cv::Mat masked_image;
 
-    applyMask(image, mask_3channel, masked_image);
+    applyMask(image, mask, masked_image);
     imshow("window", masked_image);
     cv::waitKey(1000);
   }
   if (debug_publisher_)
   {
-    cv::Mat mask_3channel;
-    cv::Mat in[] = { mask, mask, mask };
-    cv::merge(in, 3, mask_3channel);
     cv::Mat masked_image;
-
-    applyMask(image, mask_3channel, masked_image);
+    applyMask(image, mask, masked_image);
 
     cv_bridge::CvImage debug_msg;
     debug_msg.header.frame_id = scan->header.frame_id;
@@ -101,23 +96,18 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
   }
 
   // This converts the mask into the 64 bit float type that it needs
-  mask.convertTo(mask, CV_64FC1);
-
-  // This duplicates the mask into all 3 channels of the depth image (to a CV_64FC3)
-  cv::Mat mask_3channel;
-  cv::Mat in[] = { mask, mask, mask };
-  cv::merge(in, 3, mask_3channel);
+  mask.convertTo(mask, CV_64FC3);
 
   // ---------- Apply mask to the depth image --------------
   cv::Mat masked_depth_image;
-  applyMask(depth_image, mask_3channel, masked_depth_image);
+  applyMask(depth_image, mask, masked_depth_image);
 
   if (debug_viewer_)
   {
     ROS_INFO_STREAM(type2str(image.type()));
     ROS_INFO_STREAM(type2str(mask.type()));
     ROS_INFO_STREAM(type2str(depth_image.type()));
-    ROS_INFO_STREAM(type2str(mask_3channel.type()));
+    ROS_INFO_STREAM(type2str(mask.type()));
 
     imshow("window", depth_image);
     cv::waitKey(1000);
@@ -132,5 +122,4 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
   // Publish masked cloud
   masked_point_cloud_pub_.publish(output);
 }
-
 }  // namespace pc_segmentation

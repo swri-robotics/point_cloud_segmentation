@@ -1,7 +1,35 @@
+/**
+ * @file hsv_thresholding.h
+ * @brief Detects features where the hsv values fall within a threshold
+ *
+ * @author Matthew Powelson
+ * @date Sept 18, 2019
+ * @version TODO
+ * @bug No known bugs
+ *
+ * @copyright Copyright (c) 2017, Southwest Research Institute
+ *
+ * @par License
+ * Software License Agreement (Apache License)
+ * @par
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * @par
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef PCS_DETECTION_HSV_THRESHOLDING_H
+#define PCS_DETECTION_HSV_THRESHOLDING_H
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-namespace pc_segmentation
+namespace pcs_detection
 {
 /**
  * @brief Detects the masking using color thresholding and returns a mask. 1 = masking, 0 = no masking by default
@@ -14,7 +42,7 @@ namespace pc_segmentation
  * @param inverted Default = false. If true, 0's are returned where masking is detected
  * @return
  */
-bool thresholdingMaskDetector(const cv::Mat& input_image, cv::Mat& mask, bool inverted = false)
+inline bool hsvThresholdingDetector(const cv::Mat& input_image, cv::Mat& mask, bool inverted = false)
 {
   const int hue_lower = 95;
   const int hue_upper = 115;
@@ -40,4 +68,5 @@ bool thresholdingMaskDetector(const cv::Mat& input_image, cv::Mat& mask, bool in
   //  mask = output;
   return true;
 }
-}  // namespace pc_segmentation
+}  // namespace pc_detection
+#endif
