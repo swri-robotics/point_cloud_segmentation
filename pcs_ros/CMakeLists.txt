@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 #find_package(PCL 1.8 REQUIRED)
 find_package(OpenCV 3 REQUIRED)
 
+catkin_python_setup()
 
 catkin_package(
   INCLUDE_DIRS include
@@ -69,16 +70,10 @@ target_link_libraries(${PROJECT_NAME}_hsv_thresholding_node ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-# Mark executable scripts (Python etc.) for installation
-# in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+ install(PROGRAMS
+   src/histogram_backprojection_node
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 # Mark executables and/or libraries for installation
  install(TARGETS pc_masker_node
