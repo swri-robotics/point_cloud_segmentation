@@ -11,7 +11,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <exec_depend>python-numpy</exec_depend>
-  <exec_depend>opencv-python</exec_depend>
+  <exec_depend>python-opencv</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

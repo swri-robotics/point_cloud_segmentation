@@ -76,7 +76,7 @@ target_link_libraries(${PROJECT_NAME}_hsv_thresholding_node ${catkin_LIBRARIES})
  )
 
 # Mark executables and/or libraries for installation
- install(TARGETS pc_masker_node
+ install(TARGETS pc_masker_node ${PROJECT_NAME}_hsv_thresholding_node
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

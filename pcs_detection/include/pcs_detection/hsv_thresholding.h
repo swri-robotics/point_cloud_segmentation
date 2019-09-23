@@ -68,5 +68,5 @@ inline bool hsvThresholdingDetector(const cv::Mat& input_image, cv::Mat& mask, b
   //  mask = output;
   return true;
 }
-}  // namespace pc_detection
+}  // namespace pcs_detection
 #endif
