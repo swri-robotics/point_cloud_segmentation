@@ -2,6 +2,7 @@
   <arg name="cloud_path" default="$(find pcs_ros)/test/data/colorized_cloud1.bag"/>
   <arg name="use_pcd" default="false" />
   <arg name="viz" default="true" />
+  <arg name="hist_backproject" default="false" />
 
   <!-- Load from a PCD file -->
   <group if="$(arg use_pcd)">
@@ -21,7 +22,12 @@
     <param name="debug_publisher" value="false" />
   </node>
 
-  <node pkg="pcs_ros" type="pcs_ros_hsv_thresholding_node" name="hsv_threshold_node" output="screen" />
+  <!-- Launch detector -->
+  <node unless="$(arg hist_backproject)" pkg="pcs_ros" type="pcs_ros_hsv_thresholding_node" name="hsv_threshold_node" output="screen" />
+  <node if="$(arg hist_backproject)" pkg="pcs_ros" type="histogram_backprojection_node" name="histogram_backprojection_node" output="screen" >
+      <param name="filepath" value="$(find pcs_detection)/scripts/example_data/trained_hist.npy"/>
+  </node>
+
   <!-- Visualization -->
   <node if="$(arg viz)" name="rviz" type="rviz" pkg="rviz" args="-d $(find pcs_ros)/config/demo.rviz" output="screen"/>
 

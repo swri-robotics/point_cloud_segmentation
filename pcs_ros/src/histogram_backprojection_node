@@ -8,6 +8,49 @@ from pcs_msgs.srv import *
 from pcs_detection.histogram_backprojection import HistogramBackprojection
 
 
+class HistogramBackprojectionServer(object):
+    """
+    Creates a ROS service that takes a sensor_msgs/Image and returns a
+    sensor_msgs/Image resulting from using histogram backprojection
+    detection.
+    """
+    service = None
+
+    def __init__(self, filepath):
+        """
+        Constructor takes an input filepath to the .npy file
+        containing the histogram
+        """
+        self.histogram_backprojection = HistogramBackprojection(filepath)
+        self.service = rospy.Service('perform_detection', ImageProcessing, self.annotateImage)
+
+        self.bridge = CvBridge()
+        rospy.logdebug("Histrogram Backprojection service is available")
+
+    def annotateImage(self, req):
+        """
+        Callback function for ImageProcessing Service. Return image is the
+        same size as the input image
+        """
+        # Convert sensor_msgs/Image to cv2 Mat
+        cv_image = self.bridge.imgmsg_to_cv2(req.input_image, "8UC3")
+
+        # Convert to numpy array and send to annotator
+        results = self.histogram_backprojection.annotate_image(np.asarray(cv_image))
+
+        # Convert results back into sensor_msgs/Image
+        res_msg = self.bridge.cv2_to_imgmsg(results, "8UC3")
+        response = ImageProcessingResponse(res_msg)
+
+        return response
+
+
 if __name__ == '__main__':
     rospy.init_node('histogram_backprojection_node')
+
+    filepath = rospy.get_param('~filepath')
+
+    # Launch server
+    server = HistogramBackprojectionServer(filepath)
+
     rospy.spin()
