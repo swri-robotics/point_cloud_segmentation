@@ -1,6 +1,10 @@
-point_cloud_segmentation
+# point_cloud_segmentation
 
-# Package Overview
+master: [![Build Status](https://travis-ci.org/swri-robotics/point_cloud_segmentation.svg?branch=master)](https://travis-ci.org/swri-robotics/point_cloud_segmentation)
+
+devel: [![Build Status](https://travis-ci.org/swri-robotics/point_cloud_segmentation.svg?branch=devel)](https://travis-ci.org/swri-robotics/point_cloud_segmentation)
+
+## Package Overview
 * pcs_detection - Contains functions for doing 2D detection
 * pcs_msgs - Contains ROS msgs
 * pcs_ros - Exposes the functions in pcs_detection as ros nodes
@@ -10,11 +14,9 @@ point_cloud_segmentation
 
 
 
-TODO:
+## TODO:
 
-* Split into libary and ROS wrapper
 * Update to Cmake 3.5
-* Add Messages
 * Add buffer for batching image processing
 * Write a readme
 * General Readability cleanup
