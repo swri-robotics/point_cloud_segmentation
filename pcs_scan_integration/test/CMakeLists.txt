@@ -20,7 +20,7 @@ if(${CMAKE_VERSION} VERSION_LESS "3.10.0")
 else()
     gtest_discover_tests(${PROJECT_NAME}_octomap_mesh_masking_unit)
 endif()
-#add_dependencies(${PROJECT_NAME}_octomap_mesh_masking_unit ${PACKAGE_LIBRARIES})   # Ask levi why this is broken
+add_dependencies(${PROJECT_NAME}_octomap_mesh_masking_unit ${PACKAGE_LIBRARIES})
 target_compile_definitions(${PROJECT_NAME}_octomap_mesh_masking_unit PRIVATE DATA_DIR="${CMAKE_SOURCE_DIR}/test")
 add_dependencies(run_tests ${PROJECT_NAME}_octomap_mesh_masking_unit)
 
