@@ -11,6 +11,8 @@ TESSERACT_COMMON_IGNORE_WARNINGS_POP
 
 using namespace pcs_scan_integration;
 
+static const bool SAVE_OUTPUT = false;
+
 class OctomapMeshMaskUnit : public ::testing::Test
 {
 protected:
@@ -146,18 +148,24 @@ TEST_F(OctomapMeshMaskUnit, maskMesh)
 
   {
     EXPECT_TRUE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_COLORIZED));
-    std::string output_path = std::string(DATA_DIR) + "/results/test_output_RETURN_COLORIZED.ply";
-    EXPECT_TRUE(masker.saveMaskedMesh(output_path));
-    CONSOLE_BRIDGE_logDebug("Saving file to data directory");
+    if (SAVE_OUTPUT)
+    {
+      std::string output_path = std::string(DATA_DIR) + "/results/test_output_RETURN_COLORIZED.ply";
+      EXPECT_TRUE(masker.saveMaskedMesh(output_path));
+      CONSOLE_BRIDGE_logDebug("Saving file to data directory");
+    }
     tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
     EXPECT_EQ(results->getVertices()->size(), 6273);
     EXPECT_EQ(results->getTriangles()->size(), 12288 * 4);
   }
   {
     EXPECT_TRUE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_INSIDE));
-    std::string output_path = std::string(DATA_DIR) + "/results/test_output_RETURN_INSIDE.ply";
-    EXPECT_TRUE(masker.saveMaskedMesh(output_path));
-    CONSOLE_BRIDGE_logDebug("Saving file to data directory");
+    if (SAVE_OUTPUT)
+    {
+      std::string output_path = std::string(DATA_DIR) + "/results/test_output_RETURN_INSIDE.ply";
+      EXPECT_TRUE(masker.saveMaskedMesh(output_path));
+      CONSOLE_BRIDGE_logDebug("Saving file to data directory");
+    }
     tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
     EXPECT_EQ(results->getVertices()->size(), 5928);
     EXPECT_EQ(results->getTriangles()->size(), 1976 * 4);
