@@ -3,6 +3,8 @@ project(pcs_ros)
 
 add_compile_options(-std=c++11)
 
+find_package(pcs_scan_integration)
+
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   pcl_conversions
@@ -22,13 +24,13 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pc_masker
   CATKIN_DEPENDS
-  cv_bridge
-  pcl_conversions
-  pcl_ros
-  pcs_detection
-  pcs_msgs
-  roscpp
-  sensor_msgs
+    cv_bridge
+    pcl_conversions
+    pcl_ros
+    pcs_detection
+    pcs_msgs
+    roscpp
+    sensor_msgs
 #  DEPENDS
 )
 
@@ -74,6 +76,11 @@ target_link_libraries(${PROJECT_NAME}_image_channel_splitter_node ${catkin_LIBRA
 add_executable(${PROJECT_NAME}_image_extractor_node src/image_extractor_node.cpp)
 add_dependencies(${PROJECT_NAME}_image_extractor_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_image_extractor_node ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_octomap_mesh_mask_node src/octomap_mesh_mask_node.cpp)
+add_dependencies(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_LIBRARIES} pcs::pcs_scan_integration_octomap_mesh_masking )
+
 
 
 #############

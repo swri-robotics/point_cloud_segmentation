@@ -1,0 +1,33 @@
+### Goal
+# Filepath of the input mesh
+string mesh_path
+
+# Point Cloud Topic
+string point_cloud_topic
+
+# Parameters used to create the octomap
+float64 resolution
+int32 lower_limit
+int32 upper_limit
+bool limit_negative
+
+# Directory where the results will be saved
+string results_dir
+
+# Valid Mask types
+int32 RETURN_INSIDE = 0
+int32 RETURN_OUTSIDE = 1
+int32 RETURN_COLORIZED = 2
+
+# Determines the way the mask is applied
+int32 mask_type
+
+---
+### Result
+# Filepath of the resulting mesh PLY file
+string results_path
+string status_msg
+
+---
+### Feedback
+

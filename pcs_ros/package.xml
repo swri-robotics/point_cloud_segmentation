@@ -16,6 +16,7 @@
   <depend>cv_bridge</depend>
   <depend>pcs_detection</depend>
   <depend>pcs_msgs</depend>
+  <depend>pcs_scan_integration</depend>
   <depend>message_runtime</depend>
 
   <exec_depend>python-opencv</exec_depend>
