@@ -1,5 +1,7 @@
 
 *.pyc
+*.vscode*
+*.workspace
 
 
 # Catkin custom files
