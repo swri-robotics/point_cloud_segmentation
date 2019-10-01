@@ -100,7 +100,7 @@ void OctomapMeshMask::setInputMesh(std::string& filepath)
   setInputMesh(mesh);
 }
 
-void OctomapMeshMask::setOctree(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud,
+void OctomapMeshMask::setOctree(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr point_cloud,
                                 const double resolution,
                                 const int& lower_limit,
                                 const int& upper_limit,

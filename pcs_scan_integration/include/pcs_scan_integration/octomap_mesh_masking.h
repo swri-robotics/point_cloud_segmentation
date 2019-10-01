@@ -100,7 +100,7 @@ public:
    * @param upper_limit Default: 255. Upper limit of allowed RGB color values
    * @param limit_negative Default: false.	If true use the data outside of the threshold rather than inside it
    */
-  void setOctree(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud,
+  void setOctree(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr point_cloud,
                  const double resolution,
                  const int& lower_limit = 0,
                  const int& upper_limit = 255,
