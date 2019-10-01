@@ -39,7 +39,7 @@ list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_octomap_mesh_masking)
 install(TARGETS ${PACKAGE_LIBRARIES}
     EXPORT ${PROJECT_NAME}-targets DESTINATION lib)
 install(EXPORT ${PROJECT_NAME}-targets
-    NAMESPACE trajopt:: DESTINATION lib/cmake/${PROJECT_NAME})
+    NAMESPACE pcs:: DESTINATION lib/cmake/${PROJECT_NAME})
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}
