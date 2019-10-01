@@ -170,8 +170,18 @@ TEST_F(OctomapMeshMaskUnit, maskMesh)
     EXPECT_EQ(results->getVertices()->size(), 5928);
     EXPECT_EQ(results->getTriangles()->size(), 1976 * 4);
   }
-
-  EXPECT_FALSE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_OUTSIDE));
+  {
+    EXPECT_TRUE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_OUTSIDE));
+    if (SAVE_OUTPUT)
+    {
+      std::string output_path = std::string(DATA_DIR) + "/results/test_output_RETURN_OUTSIDE.ply";
+      EXPECT_TRUE(masker.saveMaskedMesh(output_path));
+      CONSOLE_BRIDGE_logDebug("Saving file to data directory");
+    }
+    tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
+    EXPECT_EQ(results->getVertices()->size(), 34200);
+    EXPECT_EQ(results->getTriangles()->size(), 11400 * 4);
+  }
 }
 
 int main(int argc, char** argv)

@@ -193,7 +193,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
     int result_idx = 0;
     for (tesseract_collision::ContactResult& result : result_vector)
     {
-      // Subshape will have 2 objects. Get the correct idx depending on if the mesh is subshap 0 or subshape 1
+      // Subshape will have 2 objects. Get the correct idx depending on if the mesh is subshape 0 or subshape 1
       int idx = 0;
       if (result.link_names[0] != "mesh_link")
         idx = 1;
@@ -224,7 +224,57 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
   }
   else if (mask_type == MaskType::RETURN_OUTSIDE)
   {
-    CONSOLE_BRIDGE_logWarn("RETURN_OUTSIDE not implemented");
+    // This will keep track of what subshapes are in collision
+    std::vector<bool> subshape_in_collision(mesh_triangles->size() / 4, false);
+
+    // Annotate which subshapes are in collision
+    for (tesseract_collision::ContactResult& result : result_vector)
+    {
+      // Subshape will have 2 objects. Get the correct idx depending on if the mesh is subshape 0 or subshape 1
+      int idx = 0;
+      if (result.link_names[0] != "mesh_link")
+        idx = 1;
+
+      subshape_in_collision[result.subshape_id[idx]] = true;
+    }
+
+    int num_collision_free_triangles =
+        std::count_if(subshape_in_collision.begin(), subshape_in_collision.end(), [](bool i) { return i == false; });
+
+    // Allocate memory for resulting vertices/triangles
+    tesseract_common::VectorVector3d vertices;
+    vertices.reserve(num_collision_free_triangles * 3);
+    Eigen::VectorXi triangles = Eigen::VectorXi::Zero(static_cast<Eigen::Index>(num_collision_free_triangles) * 4);
+
+    // Add the ones that are not in collision to the masked_mesh_
+    int result_idx = 0;
+    for (int subshape_id = 0; subshape_id < subshape_in_collision.size(); subshape_id++)
+    {
+      if (!subshape_in_collision[subshape_id])
+      {
+        vertices.push_back((*mesh_vertices)[(*mesh_triangles)[4 * subshape_id + 1]]);
+        vertices.push_back((*mesh_vertices)[(*mesh_triangles)[4 * subshape_id + 2]]);
+        vertices.push_back((*mesh_vertices)[(*mesh_triangles)[4 * subshape_id + 3]]);
+
+        // tesseract_geometry::Mesh accepts all polygons. The format is [ num_vertices vert_1 vert_2 vert_3 num_vertices
+        // vert_1 ... ]. Thus there are 4 entries for each triangle that are the last 3 entries in the vertex list
+        // (since we are just blindly pushing them back). Note that this method results in duplicate vertices -
+        // potentially a lot of them.
+        triangles[result_idx + 0] = 3;
+        triangles[result_idx + 1] = vertices.size() - 3;
+        triangles[result_idx + 2] = vertices.size() - 2;
+        triangles[result_idx + 3] = vertices.size() - 1;
+        result_idx += 4;
+      }
+    }
+    // Construct the mesh from the vertices and triangles
+    auto vertices_ptr = std::make_shared<tesseract_common::VectorVector3d>(vertices);
+    auto triangles_ptr = std::make_shared<Eigen::VectorXi>(triangles);
+    masked_mesh_ = std::make_shared<tesseract_geometry::Mesh>(vertices_ptr, triangles_ptr);
+    // TODO: Rethink the handling of color here. It should probably go in the Mesh object itself and pass through the
+    // colors from the input (if given)
+    mesh_vertices_color_.assign(masked_mesh_->getVertices()->size(), Eigen::Vector3i(0, 128, 0));
+    return true;
   }
 
   return false;
