@@ -67,6 +67,10 @@ add_executable(${PROJECT_NAME}_hsv_thresholding_node src/hsv_thresholding_node.c
 add_dependencies(${PROJECT_NAME}_hsv_thresholding_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_hsv_thresholding_node ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_image_channel_splitter_node src/image_channel_splitter_node.cpp)
+add_dependencies(${PROJECT_NAME}_image_channel_splitter_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_image_channel_splitter_node ${catkin_LIBRARIES})
+
 add_executable(${PROJECT_NAME}_image_extractor_node src/image_extractor_node.cpp)
 add_dependencies(${PROJECT_NAME}_image_extractor_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_image_extractor_node ${catkin_LIBRARIES})
