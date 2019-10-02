@@ -22,7 +22,6 @@ env:
     - NOT_TEST_INSTALL=true
     - CMAKE_ARGS=-DENABLE_TESTS=ON
     - BUILD_PKGS_WHITELIST="pcs_detection pcs_msgs pcs_ros pcs_scan_integration"
-    - VERBOSE_OUTPUT=true
 
 matrix:
   include:
