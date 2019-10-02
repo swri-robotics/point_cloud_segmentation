@@ -1,114 +1,113 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(pcs_detection)
+cmake_minimum_required(VERSION 3.5.0)
+project(pcs_detection VERSION 0.1.0 LANGUAGES CXX)
 
-add_compile_options(-std=c++11)
+find_package(console_bridge REQUIRED)
+find_package(PCL REQUIRED)
+find_package(OpenCV REQUIRED)
 
-find_package(catkin REQUIRED)
-
-catkin_python_setup()
-
-
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES pcs_detection
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
+list(FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_11 CXX_FEATURE_FOUND)
 
 ###########
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(
- include
- ${catkin_INCLUDE_DIRS}
-)
+add_library(${PROJECT_NAME}_hsv_thresholding INTERFACE)
+target_link_libraries(${PROJECT_NAME}_hsv_thresholding INTERFACE console_bridge ${OpenCV_LIBS})
+target_compile_options(${PROJECT_NAME}_hsv_thresholding INTERFACE -Wsuggest-override -Wconversion -Wsign-conversion)
+if(CXX_FEATURE_FOUND EQUAL "-1")
+    target_compile_options(${PROJECT_NAME}_hsv_thresholding INTERFACE -std=c++11)
+else()
+    target_compile_features(${PROJECT_NAME}_hsv_thresholding INTERFACE cxx_std_11)
+endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(${PROJECT_NAME}_hsv_thresholding INTERFACE -mno-avx)
+  else()
+    message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+  endif()
+target_include_directories(${PROJECT_NAME}_hsv_thresholding INTERFACE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>")
+target_include_directories(${PROJECT_NAME}_hsv_thresholding SYSTEM INTERFACE
+    ${OpenCV_INCLUDE_DIRS})
 
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/pcs_detection.cpp
-# )
+list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_hsv_thresholding)
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_library(${PROJECT_NAME}_point_cloud_annotator SHARED src/${PROJECT_NAME}/point_cloud_annotator.cpp)
+target_link_libraries(${PROJECT_NAME}_point_cloud_annotator PUBLIC  console_bridge ${PCL_LIBRARIES})
+target_compile_options(${PROJECT_NAME}_point_cloud_annotator PRIVATE -Wsuggest-override -Wconversion -Wsign-conversion)
+if(CXX_FEATURE_FOUND EQUAL "-1")
+    target_compile_options(${PROJECT_NAME}_point_cloud_annotator PUBLIC -std=c++11)
+else()
+    target_compile_features(${PROJECT_NAME}_point_cloud_annotator PUBLIC cxx_std_11)
+endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(${PROJECT_NAME}_point_cloud_annotator PUBLIC -mno-avx)
+  else()
+    message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+  endif()
+target_include_directories(${PROJECT_NAME}_point_cloud_annotator PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>")
+target_include_directories(${PROJECT_NAME}_point_cloud_annotator SYSTEM PUBLIC
+    ${PCL_INCLUDE_DIRS})
 
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/pcs_detection_node.cpp)
+list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_point_cloud_annotator)
 
-## Rename C++ executable without prefix
-## The above recommended prefix causes long target names, the following renames the
-## target back to the shorter version for ease of user use
-## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+#############
+## Python ##
+#############
+add_subdirectory(src_python)
 
 #############
 ## Install ##
 #############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables and/or libraries for installation
-# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+# Mark executables and/or libraries for installation
+install(TARGETS ${PACKAGE_LIBRARIES}
+    EXPORT ${PROJECT_NAME}-targets DESTINATION lib)
+install(EXPORT ${PROJECT_NAME}-targets
+    NAMESPACE pcs:: DESTINATION lib/cmake/${PROJECT_NAME})
 
 # Mark cpp header files for installation
- install(DIRECTORY include/${PROJECT_NAME}/
-   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-   FILES_MATCHING PATTERN "*.h"
-   PATTERN ".svn" EXCLUDE
+install(DIRECTORY include/${PROJECT_NAME}
+  DESTINATION include
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN ".svn" EXCLUDE
  )
 
-# Mark other files for installation (e.g. launch and bag files, etc.)
- install(FILES
-   scripts/histogram_backprojection_example.py
-   scripts/histogram_training.py
-   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
- )
+install(FILES package.xml DESTINATION share/${PROJECT_NAME})
 
-#############
-## Testing ##
-#############
+# Create cmake config files
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/${PROJECT_NAME}-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_pcs_detection.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+    VERSION ${PROJECT_VERSION} COMPATIBILITY ExactVersion)
 
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+    DESTINATION lib/cmake/${PROJECT_NAME})
+
+export(EXPORT ${PROJECT_NAME}-targets
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake)
+
+
+
+#if (ENABLE_TESTS)
+#  enable_testing()
+#  add_custom_target(run_tests ALL
+#      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+#      COMMAND ${CMAKE_CTEST_COMMAND} -V -C ${CONFIGURATION})
+
+#  add_subdirectory(test)
+#endif()
+

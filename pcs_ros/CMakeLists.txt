@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5.0)
 project(pcs_ros)
 
 add_compile_options(-std=c++11)
 
-find_package(pcs_scan_integration)
+find_package(pcs_scan_integration REQUIRED)
+find_package(pcs_detection REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   pcl_conversions
   pcl_ros
-  pcs_detection
   pcs_msgs
   roscpp
   sensor_msgs
@@ -27,7 +27,6 @@ catkin_package(
     cv_bridge
     pcl_conversions
     pcl_ros
-    pcs_detection
     pcs_msgs
     roscpp
     sensor_msgs
@@ -44,30 +43,25 @@ include_directories(
  ${PCL_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
- add_library(pc_masker
+# Declare a C++ library
+ add_library(pc_masker SHARED
    src/${PROJECT_NAME}/pc_masker.cpp
  )
 add_dependencies(pc_masker ${pc_masker_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pc_masker
+target_link_libraries(pc_masker PUBLIC
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
-  ${OpenCV_LIBRARIES})
-
-
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+  ${OpenCV_LIBRARIES}
+  pcs::pcs_detection_hsv_thresholding)
 
 # Declare a C++ executable
 add_executable(pc_masker_node src/pc_masker_node.cpp)
-add_dependencies(pc_masker_node ${pc_masker_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} point_cloud_segmentation_generate_messages_cpp)
+add_dependencies(pc_masker_node ${pc_masker_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pc_masker_node pc_masker ${catkin_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_hsv_thresholding_node src/hsv_thresholding_node.cpp)
 add_dependencies(${PROJECT_NAME}_hsv_thresholding_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_hsv_thresholding_node ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_hsv_thresholding_node ${catkin_LIBRARIES} pcs::pcs_detection_hsv_thresholding)
 
 add_executable(${PROJECT_NAME}_image_channel_splitter_node src/image_channel_splitter_node.cpp)
 add_dependencies(${PROJECT_NAME}_image_channel_splitter_node ${catkin_EXPORTED_TARGETS})

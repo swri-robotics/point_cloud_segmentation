@@ -7,7 +7,6 @@ import numpy as np
 from pcs_msgs.srv import *
 from pcs_detection.histogram_backprojection import HistogramBackprojection
 
-
 class HistogramBackprojectionServer(object):
     """
     Creates a ROS service that takes a sensor_msgs/Image and returns a
