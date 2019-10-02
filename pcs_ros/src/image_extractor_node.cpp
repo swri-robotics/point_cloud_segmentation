@@ -1,7 +1,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/point_cloud.h>
-#include <pcs_ros/utils.h>
+#include <pcs_detection/utils.h>
 
 namespace pcs_ros
 {
@@ -22,7 +22,7 @@ public:
   {
     // Extract the image
     cv::Mat position_image;
-    pc_segmentation::cloudToImage(cloud, position_image, image_.image);
+    pcs_detection::cloudToImage(cloud, position_image, image_.image);
 
     // Convert to ROS type and copy header
     image_.encoding = sensor_msgs::image_encodings::TYPE_8UC3;

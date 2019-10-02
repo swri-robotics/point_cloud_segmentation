@@ -4,7 +4,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
-namespace pc_segmentation
+namespace pcs_detection
 {
 /**
  * @brief Returns a string associated with the openCV typedef (ie CV_8U
@@ -67,7 +67,7 @@ bool applyMask(const cv::Mat& input_image, const cv::Mat& mask, cv::Mat& masked_
  * @param position_image cv::Mat with 3 64 bit channels encoding x, y, z position
  * @param color_image cv::Mat encoding extracted rgb image
  */
-void cloudToImage(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud,
+void cloudToImage(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
                   cv::Mat& position_image,
                   cv::Mat& color_image)
 {
@@ -134,4 +134,4 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr imageToCloud(const cv::Mat& color_image,
   return cloud;
 }
 
-}  // namespace pc_segmentation
+}  // namespace pcs_detection

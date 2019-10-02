@@ -33,7 +33,7 @@ target_include_directories(${PROJECT_NAME}_hsv_thresholding SYSTEM INTERFACE
 list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_hsv_thresholding)
 
 add_library(${PROJECT_NAME}_point_cloud_annotator SHARED src/${PROJECT_NAME}/point_cloud_annotator.cpp)
-target_link_libraries(${PROJECT_NAME}_point_cloud_annotator PUBLIC  console_bridge ${PCL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_point_cloud_annotator PUBLIC  console_bridge ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_compile_options(${PROJECT_NAME}_point_cloud_annotator PRIVATE -Wsuggest-override -Wconversion -Wsign-conversion)
 if(CXX_FEATURE_FOUND EQUAL "-1")
     target_compile_options(${PROJECT_NAME}_point_cloud_annotator PUBLIC -std=c++11)
@@ -49,7 +49,8 @@ target_include_directories(${PROJECT_NAME}_point_cloud_annotator PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include>")
 target_include_directories(${PROJECT_NAME}_point_cloud_annotator SYSTEM PUBLIC
-    ${PCL_INCLUDE_DIRS})
+    ${PCL_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS})
 
 list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_point_cloud_annotator)
 

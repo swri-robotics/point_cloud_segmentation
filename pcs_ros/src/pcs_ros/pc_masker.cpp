@@ -9,7 +9,7 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include <pcs_detection/hsv_thresholding.h>
-#include <pcs_ros/utils.h>
+#include <pcs_detection/utils.h>
 #include <pcs_ros/pc_masker.h>
 
 namespace pc_segmentation
@@ -36,7 +36,7 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
   // -------  Extract RGB Image from cloud ----------
   cv::Mat depth_image;
   cv::Mat image;
-  pc_segmentation::cloudToImage(scan, depth_image, image);
+  pcs_detection::cloudToImage(scan, depth_image, image);
   if (debug_viewer_)
   {
     cv::imwrite("extracted_image.png", image);
@@ -77,14 +77,14 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
 
     cv::Mat masked_image;
 
-    applyMask(image, mask, masked_image);
+    pcs_detection::applyMask(image, mask, masked_image);
     imshow("window", masked_image);
     cv::waitKey(1000);
   }
   if (debug_publisher_)
   {
     cv::Mat masked_image;
-    applyMask(image, mask, masked_image);
+    pcs_detection::applyMask(image, mask, masked_image);
 
     cv_bridge::CvImage debug_msg;
     debug_msg.header.frame_id = scan->header.frame_id;
@@ -100,14 +100,14 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
 
   // ---------- Apply mask to the depth image --------------
   cv::Mat masked_depth_image;
-  applyMask(depth_image, mask, masked_depth_image);
+  pcs_detection::applyMask(depth_image, mask, masked_depth_image);
 
   if (debug_viewer_)
   {
-    ROS_INFO_STREAM(type2str(image.type()));
-    ROS_INFO_STREAM(type2str(mask.type()));
-    ROS_INFO_STREAM(type2str(depth_image.type()));
-    ROS_INFO_STREAM(type2str(mask.type()));
+    ROS_INFO_STREAM(pcs_detection::type2str(image.type()));
+    ROS_INFO_STREAM(pcs_detection::type2str(mask.type()));
+    ROS_INFO_STREAM(pcs_detection::type2str(depth_image.type()));
+    ROS_INFO_STREAM(pcs_detection::type2str(mask.type()));
 
     imshow("window", depth_image);
     cv::waitKey(1000);
@@ -116,7 +116,7 @@ void PCMasker::newPCCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& scan)
   }
 
   // Now the masked cv::Mat depth image is converted back into a pcl type to be sent as a msg
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr output = imageToCloud(image, masked_depth_image);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr output = pcs_detection::imageToCloud(image, masked_depth_image);
   output->header = scan->header;
 
   // Publish masked cloud

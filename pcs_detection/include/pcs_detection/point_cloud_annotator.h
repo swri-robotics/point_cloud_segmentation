@@ -3,7 +3,7 @@
  * @brief Annotates a colorized pointcloud based on some detection function
  *
  * @author Matthew Powelson
- * @date OCt 2, 2019
+ * @date Oct 2, 2019
  * @version TODO
  * @bug No known bugs
  *
@@ -27,18 +27,75 @@
 #ifndef PCS_DETECTION_POINT_CLOUD_ANNOTATOR_H
 #define PCS_DETECTION_POINT_CLOUD_ANNOTATOR_H
 
+#include <queue>
+#include <mutex>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <opencv2/core/core.hpp>
 
 namespace pcs_detection
 {
+typedef std::vector<pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr> pointCloudVec;
+/**
+ * @brief Contains all data necessary to process a point cloud at a later time
+ *
+ * The idea is that these could go into a buffer for batch processing. This could be expanded to contain things like the
+ * tranform if necessary.
+ */
+struct PointCloudData
+{
+  PointCloudData() = default;
+
+  PointCloudData(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud,
+                 std::shared_ptr<cv::Mat>& position_image,
+                 std::shared_ptr<cv::Mat>& image_2d)
+    : cloud_(cloud), position_image_(position_image), image_2d_(image_2d)
+  {
+  }
+  /** @brief Input point cloud */
+  pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud_;
+  /** @brief cv::Mat (64FC3) with 3 64 bit channels encoding x, y, z position*/
+  std::shared_ptr<cv::Mat> position_image_;
+  /** @brief cv::Mat (8UC3) encoding extracted 2D image */
+  std::shared_ptr<cv::Mat> image_2d_;
+};
+
+/**
+ * @brief The PointCloudAnnotator class
+ */
 class PointCloudAnnotator
 {
 public:
-  PointCloudAnnotator() = default;
+  PointCloudAnnotator(std::function<std::vector<cv::Mat>(const std::vector<cv::Mat>)> image_annotator_callback,
+                      std::function<void(pointCloudVec)> results_callback,
+                      long unsigned int buffer_size = 1)
+    : image_annotator_callback_(std::move(image_annotator_callback))
+    , results_callback_(std::move(results_callback))
+    , batch_size_(buffer_size)
+  {
+  }
+
+  /** @brief Adds a pointcloud to the processing queue and does any preprocessing necessary */
+  void addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud);
+
+  /** @brief Remove data from the buffer, calls the annotate callback, and returns results*/
+  void annotateImages();
+
+protected:
+  /** @brief Called to annotate a buffer. */
+  std::function<std::vector<cv::Mat>(const std::vector<cv::Mat>)> image_annotator_callback_;
+  /** @brief Called when results are ready. */
+  std::function<void(pointCloudVec)> results_callback_;
+  /** @brief Size at which the buffer submits a new batch of images to be annotated */
+  long unsigned int batch_size_;
+
+  /** @brief This stores the data until there is enough of it to be batch processed. This will likely need to be a ring
+   * buffer or something more intelligent if this becomes threaded */
+  std::queue<PointCloudData> input_buffer_;
 
 private:
-  std::function<void(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr)> callback_;
+  std::mutex buffer_mutex_;
 };
 
 }  // namespace pcs_detection

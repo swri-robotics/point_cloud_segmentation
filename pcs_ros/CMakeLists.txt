@@ -69,13 +69,15 @@ target_link_libraries(${PROJECT_NAME}_image_channel_splitter_node ${catkin_LIBRA
 
 add_executable(${PROJECT_NAME}_image_extractor_node src/image_extractor_node.cpp)
 add_dependencies(${PROJECT_NAME}_image_extractor_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_image_extractor_node ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_image_extractor_node ${catkin_LIBRARIES} pcs::pcs_detection_hsv_thresholding)
 
 add_executable(${PROJECT_NAME}_octomap_mesh_mask_node src/octomap_mesh_mask_node.cpp)
 add_dependencies(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_LIBRARIES} pcs::pcs_scan_integration_octomap_mesh_masking )
 
-
+add_executable(${PROJECT_NAME}_point_cloud_annotator_node src/point_cloud_annotator_node.cpp)
+add_dependencies(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_LIBRARIES} pcs::pcs_detection_point_cloud_annotator)
 
 #############
 ## Install ##
@@ -86,7 +88,13 @@ target_link_libraries(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_LIBRARIES}
  )
 
 # Mark executables and/or libraries for installation
- install(TARGETS pc_masker_node ${PROJECT_NAME}_hsv_thresholding_node ${PROJECT_NAME}_image_extractor_node
+ install(TARGETS
+     pc_masker_node
+     ${PROJECT_NAME}_hsv_thresholding_node
+     ${PROJECT_NAME}_image_channel_splitter_node
+     ${PROJECT_NAME}_image_extractor_node
+     ${PROJECT_NAME}_octomap_mesh_mask_node
+     ${PROJECT_NAME}_point_cloud_annotator_node
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
