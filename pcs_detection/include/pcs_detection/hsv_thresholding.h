@@ -32,14 +32,14 @@
 namespace pcs_detection
 {
 /**
- * @brief Detects the masking using color thresholding and returns a mask. 1 = masking, 0 = no masking by default
+ * @brief Detects a color using color thresholding and returns an annotation. 255 = detected, 0 = no color by default
  *
  * This is mostly copied from https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html
  *
  * Use the Python script hsv_threshold_tuning.py to find suitable thresholds
  * @param input_image
- * @param mask Binary mask the same size as the input
- * @param inverted Default = false. If true, 0's are returned where masking is detected
+ * @param mask Annotation the same size as the input
+ * @param inverted Default = false. If true, 0's are returned where the color is detected
  * @return
  */
 inline bool hsvThresholdingDetector(const cv::Mat& input_image, cv::Mat& mask, bool inverted = false)
@@ -57,14 +57,14 @@ inline bool hsvThresholdingDetector(const cv::Mat& input_image, cv::Mat& mask, b
           cv::Scalar(hue_lower, saturation_lower, value_lower),
           cv::Scalar(hue_upper, saturation_upper, value_upper),
           mask);
-  // Set to 0 - 1 rather than 0 - 255
+  // Invert if flag is set
   if (inverted)
-    mask = (255 - mask) / 255;
+    mask = (255 - mask);
   else
-    mask = mask / 255;
+    mask = mask;
 
-  // Uncomment to return a completely 1 mask.
-  //  cv::Mat output(480, 640, CV_8UC1, cv::Scalar(1));
+  // Uncomment to return a completely 255 mask.
+  //  cv::Mat output(480, 640, CV_8UC1, cv::Scalar(255));
   //  mask = output;
   return true;
 }

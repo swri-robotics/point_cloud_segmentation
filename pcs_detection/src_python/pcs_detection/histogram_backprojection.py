@@ -21,7 +21,7 @@ class HistogramBackprojection:
 
     def annotate_image(self, input_image):
         """
-        Returns a binary mask image where 1 corresponds to regions inside the
+        Returns a binary mask image where 255 corresponds to regions inside the
         histogram and 0 corresponds to regions outside. Mask will be the same
         size as the input image
         """
@@ -42,6 +42,9 @@ class HistogramBackprojection:
 
         # Normalize to 0 - 1
         cv.normalize(cleaned, cleaned, 0, 1, cv.NORM_MINMAX, cv.CV_8UC3)
+
+        # Convert to 0/255
+        cleaned = 255 * cleaned
 
         # Convert back to 3 Channel Image
         output_image = cv.merge((cleaned, cleaned, cleaned))
