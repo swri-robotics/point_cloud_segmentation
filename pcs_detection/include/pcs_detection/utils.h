@@ -131,6 +131,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr imageToCloud(const cv::Mat& color_image,
       cloud->points.push_back(point);
     }
   }
+  cloud->height = color_image.rows;
+  cloud->width = color_image.cols;
   return cloud;
 }
 
