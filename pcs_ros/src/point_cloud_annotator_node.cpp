@@ -11,6 +11,7 @@
 namespace pcs_ros
 {
 static const std::string SERVICE_NAME = "/perform_detection";
+static const bool PUBLISH_DEBUG_IMAGES = true;
 
 class PointCloudAnnotatorNode
 {
@@ -34,12 +35,16 @@ public:
     // Loop over all images and process them
     for (std::size_t idx = 0; idx < input_images.size(); idx++)
     {
-      cv_image.image = input_images[idx];
+      input_images[idx].copyTo(cv_image.image);
+      srv.request.input_image = *cv_image.toImageMsg();
 
       if (!image_processing_client_.call(srv))
       {
         ROS_ERROR("Image processing service call failed");
       }
+
+      if (PUBLISH_DEBUG_IMAGES)
+        debug_image_pub_.publish(srv.response.returned_image);
 
       cv_bridge::CvImagePtr result =
           cv_bridge::toCvCopy(srv.response.returned_image, sensor_msgs::image_encodings::TYPE_8UC3);
@@ -74,8 +79,9 @@ public:
     image_processing_client_ = nh_.serviceClient<pcs_msgs::ImageProcessing>(SERVICE_NAME);
 
     // Create publishers and subscribers
-    sub_ = nh_.subscribe(input_topic_, 30, &PointCloudAnnotatorNode::subscriberCallback, this);
-    pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZRGB>>(output_topic_, 30);
+    sub_ = nh_.subscribe(input_topic_, 1, &PointCloudAnnotatorNode::subscriberCallback, this);
+    pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZRGB>>(output_topic_, 5);
+    debug_image_pub_ = nh_.advertise<sensor_msgs::Image>("debug_image_topic", 5);
 
     // Print the topics we are using
     std::string t1 = nh_.resolveName(input_topic_);
@@ -91,6 +97,7 @@ private:
   std::string output_topic_;
   ros::Subscriber sub_;
   ros::Publisher pub_;
+  ros::Publisher debug_image_pub_;
   /** @brief Service client used to process the image */
   ros::ServiceClient image_processing_client_;
 

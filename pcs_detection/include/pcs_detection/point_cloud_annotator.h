@@ -69,11 +69,13 @@ class PointCloudAnnotator
 public:
   PointCloudAnnotator(std::function<std::vector<cv::Mat>(const std::vector<cv::Mat>)> image_annotator_callback,
                       std::function<void(pointCloudVec)> results_callback,
-                      long unsigned int buffer_size = 1)
+                      long unsigned int batch_size = 1)
     : image_annotator_callback_(std::move(image_annotator_callback))
     , results_callback_(std::move(results_callback))
-    , batch_size_(buffer_size)
+    , batch_size_(batch_size)
   {
+    // This is not a requirement. It can be as big as you want. This is mostly just a sanity check.
+    assert(batch_size_ <= 1024);
   }
 
   /** @brief Adds a pointcloud to the processing queue and does any preprocessing necessary */

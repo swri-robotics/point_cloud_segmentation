@@ -17,7 +17,7 @@ void PointCloudAnnotator::addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Const
   buffer_mutex_.unlock();
 
   // Check buffer size - This could be done in another thread
-  if (input_buffer_.size() > batch_size_)
+  if (input_buffer_.size() >= batch_size_)
   {
     annotateImages();
   }
@@ -25,14 +25,14 @@ void PointCloudAnnotator::addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Const
 
 void PointCloudAnnotator::annotateImages()
 {
-  assert(input_buffer_.size() > batch_size_);
+  assert(input_buffer_.size() >= batch_size_);
 
   // Pull data out of queue and place it in a vector
   buffer_mutex_.lock();
   std::vector<cv::Mat> vec(batch_size_);
   for (int idx = 0; idx < batch_size_; idx++)
   {
-    vec.push_back(*input_buffer_.front().image_2d_);
+    vec[idx] = *input_buffer_.front().image_2d_;
   }
   buffer_mutex_.unlock();
 
@@ -44,7 +44,8 @@ void PointCloudAnnotator::annotateImages()
   pointCloudVec results(batch_size_);
   for (std::size_t idx = 0; idx < batch_size_; idx++)
   {
-    results.push_back(pcs_detection::imageToCloud(image_annotations[idx], *input_buffer_.front().position_image_));
+    results[idx] = pcs_detection::imageToCloud(
+        image_annotations[idx], *input_buffer_.front().position_image_, input_buffer_.front().cloud_->header);
     input_buffer_.pop();
   }
   buffer_mutex_.unlock();
