@@ -78,11 +78,13 @@ public:
     assert(batch_size_ <= 1024);
   }
 
-  /** @brief Adds a pointcloud to the processing queue and does any preprocessing necessary */
-  void addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud);
+  /** @brief Adds a pointcloud to the processing queue and does any preprocessing necessary
+   * @return false if failed*/
+  bool addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud);
 
-  /** @brief Remove data from the buffer, calls the annotate callback, and returns results*/
-  void annotateImages();
+  /** @brief Remove data from the buffer, calls the annotate callback, and returns results
+   * @return false if failed*/
+  bool annotateImages();
 
 protected:
   /** @brief Called to annotate a buffer. */

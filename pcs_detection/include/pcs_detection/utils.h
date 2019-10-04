@@ -71,26 +71,27 @@ void cloudToImage(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
                   cv::Mat& position_image,
                   cv::Mat& color_image)
 {
-  assert(cloud->width != 1 && cloud->height != 1);
+  // Check that this is a structured point cloud
+  assert(cloud->width != 1 || cloud->height != 1);
 
   // Resize coordinates to the size of the point cloud (stored in a 64 bit float 3 channel matrix)
-  position_image = cv::Mat(480, 640, CV_64FC3);
+  position_image = cv::Mat(color_image.cols, color_image.rows, CV_64FC3);
   // Resize image to the size of the depth image (stored in a 8 bit unsigned 3 channel matrix)
-  color_image = cv::Mat(480, 640, CV_8UC3);
+  color_image = cv::Mat(color_image.cols, color_image.rows, CV_8UC3);
   // Iterate over the rows and columns of the structured point cloud
   for (int y = 0; y < color_image.rows; y++)
   {
     for (int x = 0; x < color_image.cols; x++)
     {
       // Pull out the xyz values from the point cloud
-      position_image.at<double>(y, x * 3 + 0) = cloud->points.at(y * color_image.cols + x).x;
-      position_image.at<double>(y, x * 3 + 1) = cloud->points.at(y * color_image.cols + x).y;
-      position_image.at<double>(y, x * 3 + 2) = cloud->points.at(y * color_image.cols + x).z;
+      position_image.at<double>(y, x * 3 + 0) = cloud->points[(y * color_image.cols + x)].x;
+      position_image.at<double>(y, x * 3 + 1) = cloud->points[(y * color_image.cols + x)].y;
+      position_image.at<double>(y, x * 3 + 2) = cloud->points[(y * color_image.cols + x)].z;
 
       // Pull out the rgb values from the point cloud
-      cv::Vec3b color = cv::Vec3b(cloud->points.at(y * color_image.cols + x).b,
-                                  cloud->points.at(y * color_image.cols + x).g,
-                                  cloud->points.at(y * color_image.cols + x).r);
+      cv::Vec3b color = cv::Vec3b(cloud->points[(y * color_image.cols + x)].b,
+                                  cloud->points[(y * color_image.cols + x)].g,
+                                  cloud->points[(y * color_image.cols + x)].r);
       // Apply color to that point
       color_image.at<cv::Vec3b>(cv::Point(x, y)) = color;
     }

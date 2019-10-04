@@ -1,9 +1,10 @@
 #include <pcs_detection/point_cloud_annotator.h>
 #include <pcs_detection/utils.h>
+#include <console_bridge/console.h>
 
 using namespace pcs_detection;
 
-void PointCloudAnnotator::addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud)
+bool PointCloudAnnotator::addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud)
 {
   // Preprocess Images
   auto position_image = std::make_shared<cv::Mat>();
@@ -19,11 +20,16 @@ void PointCloudAnnotator::addPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Const
   // Check buffer size - This could be done in another thread
   if (input_buffer_.size() >= batch_size_)
   {
-    annotateImages();
+    if (!annotateImages())
+    {
+      CONSOLE_BRIDGE_logError("Annotate Images failed");
+      return false;
+    }
   }
+  return true;
 }
 
-void PointCloudAnnotator::annotateImages()
+bool PointCloudAnnotator::annotateImages()
 {
   assert(input_buffer_.size() >= batch_size_);
 
@@ -37,7 +43,16 @@ void PointCloudAnnotator::annotateImages()
   buffer_mutex_.unlock();
 
   // Send that data to the annotator (blocking and long potentially running)
-  std::vector<cv::Mat> image_annotations = image_annotator_callback_(vec);
+  std::vector<cv::Mat> image_annotations;
+  try
+  {
+    image_annotations = image_annotator_callback_(vec);
+  }
+  catch (...)
+  {
+    CONSOLE_BRIDGE_logError("Image Annotator Callback Exception");
+    return false;
+  }
 
   // Apply annotations
   buffer_mutex_.lock();
@@ -51,5 +66,14 @@ void PointCloudAnnotator::annotateImages()
   buffer_mutex_.unlock();
 
   // Send the results to the results callback
-  results_callback_(results);
+  try
+  {
+    results_callback_(results);
+  }
+  catch (...)
+  {
+    CONSOLE_BRIDGE_logError("Results Callback Exception");
+    return false;
+  }
+  return true;
 }
