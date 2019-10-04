@@ -1,3 +1,31 @@
+/**
+ * @file utils.h
+ * @brief Utilities primarily for point cloud annotation
+ *
+ * @author Matthew Powelson
+ * @date Octover 4, 2019
+ * @version TODO
+ * @bug No known bugs
+ *
+ * @copyright Copyright (c) 2010, Southwest Research Institute
+ *
+ * @par License
+ * Software License Agreement (Apache License)
+ * @par
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * @par
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <limits>
+
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
@@ -11,7 +39,7 @@ namespace pcs_detection
  * @param type OpenCV flags specified in typedef in interface.h
  * @return A human readable string coresponding to the typedef
  */
-std::string type2str(const int type)
+inline std::string type2str(const int type)
 {
   std::string r;
 
@@ -52,7 +80,7 @@ std::string type2str(const int type)
   return r;
 }
 
-bool applyMask(const cv::Mat& input_image, const cv::Mat& mask, cv::Mat& masked_image)
+inline bool applyMask(const cv::Mat& input_image, const cv::Mat& mask, cv::Mat& masked_image)
 {
   masked_image = input_image.mul(mask);
   return true;
@@ -67,17 +95,19 @@ bool applyMask(const cv::Mat& input_image, const cv::Mat& mask, cv::Mat& masked_
  * @param position_image cv::Mat with 3 64 bit channels encoding x, y, z position
  * @param color_image cv::Mat encoding extracted rgb image
  */
-void cloudToImage(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
-                  cv::Mat& position_image,
-                  cv::Mat& color_image)
+inline void cloudToImage(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
+                         cv::Mat& position_image,
+                         cv::Mat& color_image)
 {
   // Check that this is a structured point cloud
   assert(cloud->width != 1 || cloud->height != 1);
+  // Check that the cloud is not so big as to cause a problem when converting uint32 to int32
+  assert(cloud->width < std::numeric_limits<int>::max() && cloud->height < std::numeric_limits<int>::max());
 
   // Resize coordinates to the size of the point cloud (stored in a 64 bit float 3 channel matrix)
-  position_image = cv::Mat(color_image.cols, color_image.rows, CV_64FC3);
+  position_image = cv::Mat(static_cast<int>(cloud->height), static_cast<int>(cloud->width), CV_64FC3);
   // Resize image to the size of the depth image (stored in a 8 bit unsigned 3 channel matrix)
-  color_image = cv::Mat(color_image.cols, color_image.rows, CV_8UC3);
+  color_image = cv::Mat(static_cast<int>(cloud->height), static_cast<int>(cloud->width), CV_8UC3);
   // Iterate over the rows and columns of the structured point cloud
   for (int y = 0; y < color_image.rows; y++)
   {
@@ -101,15 +131,17 @@ void cloudToImage(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
 /**
  * @brief Convert a color image and a position encoded image back to a point cloud
  *
- * TODO: Unit tests, handle nans
  * @param color_image CV_8UC3 cv::Mat RGB image
  * @param depth_image CV_64F3 cv::Mat where the channels correspond to x, y, and z position
  * @return Returns an XYZRGB point cloud generated from the inputs
  */
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr imageToCloud(const cv::Mat& color_image,
-                                                    const cv::Mat& position_image,
-                                                    const pcl::PCLHeader& header = pcl::PCLHeader())
+inline pcl::PointCloud<pcl::PointXYZRGB>::Ptr imageToCloud(const cv::Mat& color_image,
+                                                           const cv::Mat& position_image,
+                                                           const pcl::PCLHeader& header = pcl::PCLHeader())
 {
+  assert(color_image.rows == position_image.rows);
+  assert(color_image.cols == position_image.cols);
+
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
   cloud->header = header;
   for (int y = 0; y < color_image.rows; y++)
@@ -134,6 +166,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr imageToCloud(const cv::Mat& color_image,
   }
   cloud->height = color_image.rows;
   cloud->width = color_image.cols;
+  cloud->is_dense = false;  // Note: This could be checked above.
   return cloud;
 }
 
