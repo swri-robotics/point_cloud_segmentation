@@ -79,6 +79,10 @@ add_executable(${PROJECT_NAME}_point_cloud_annotator_node src/point_cloud_annota
 add_dependencies(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_LIBRARIES} pcs::pcs_detection_point_cloud_annotator)
 
+add_executable(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node src/point_cloud_xyzi_to_xyzrgb_node.cpp)
+add_dependencies(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
