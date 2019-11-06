@@ -104,31 +104,6 @@ def dump_config(config):
     with open(save_path, 'w') as outfile:
         json.dump(config_dump, outfile, indent=4) 
 
-def load_training_config(config):
-    '''
-    Loads in the config file associated with the validation weights
-    and sets the currrent model and channels to that used in training 
-    '''
-    config_path = os.path.join(os.path.split(config.VAL_WEIGHT_PATH)[0],'config.json')
-    try:
-        with open(config_path, 'r') as infile:
-            train_config = json.load(infile)
-
-        # change parameters relevant to validation
-        config.MODEL = train_config['MODEL']
-        print('Using model:', config.MODEL)
-        config.CHANNEL = train_config['CHANNEL']
-        print('Using channel:',config.CHANNEL)
-       
-        # Useful parameters that were used for training
-        
-        # print('Label Thickness:', train_config['LABEL_THICKNESS'])
-        # print('Background reduction:', train_config['BACKGROUND_REDUCTION'])
-        # print('Learning rate:', train_config['LEARNING_RATE'])
-        # print('Augmentations:', train_config['AUGMENTATIONS'])
-    except:
-        print('Could not load in config')
-
 def resize(image, scale_factor):
     '''
     Used to resize a display image.

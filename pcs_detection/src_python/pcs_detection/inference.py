@@ -23,11 +23,10 @@
  * limitations under the License.
  '''
 
-from utils import load_training_config
 import numpy as np
-from preprocess import preprocessing
+from pcs_detection.preprocess import preprocessing
 
-class inference():
+class Inference():
     '''
     Edits the config based on the validation weights and builds the model
     '''
@@ -40,13 +39,14 @@ class inference():
 
         # load in model settings from the config associated with the weights
         print('___Config Options From Training___')
-        load_training_config(self.config)
+        print('Using model:', config.MODEL)
+        print('Using channel:',config.CHANNEL)
         print('___________________________________')
         # build the model --- this only needs to be done once 
         if config.MODEL == 'fcn8':
-            from fcn8_model import fcn8
+            from pcs_detection.models.fcn8_model import fcn8
         elif config.MODEL == 'fcn_reduced':
-            from fcn8_reduced import fcn8
+            from pcs_detection.models.fcn8_reduced import fcn8
 
         # create the model
         weldDetector = fcn8(self.config)
@@ -54,12 +54,17 @@ class inference():
         weldDetector.build_model(val=True, val_weights = self.config.VAL_WEIGHT_PATH)
 
         self.model = weldDetector.model
+        print("Model loaded and ready")
 
     def make_prediction(self, img_data_original):
         '''
         Applies preprocessing, makes a prediction, and converts it to a boolean mask 
         Returns np array of size img_height x img_width
         '''
+        if not img_data_original.any():
+          print("Input image is invalid")
+          return img_data_original
+
         # do not edit the original image
         img_data = img_data_original.copy()
 
@@ -70,6 +75,7 @@ class inference():
 
         # make a prediction and convert it to a boolean mask
         prediction = self.model.predict(img_data)
+        print(type(self.config.CONFIDENCE_THRESHOLD))
         prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
         prediction = (np.argmax(prediction,axis=-1)).astype(np.uint8)
         prediction = prediction[0]
