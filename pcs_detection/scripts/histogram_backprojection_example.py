@@ -2,7 +2,7 @@
 
 import numpy as np
 import cv2 as cv
-from pcs_detection.histogram_backprojection import HistogramBackprojection
+from pcs_detection.models.histogram_backprojection import HistogramBackprojection
 
 if __name__ == '__main__':
     # Load the histogram into the annotator
