@@ -30,8 +30,8 @@ import random
 from itertools import cycle
 import cv2
 import numpy as np
-from utils import get_labels_from_xml
-from preprocess import preprocessing
+from src_python.pcs_detection.utils import get_labels_from_xml
+from src_python.pcs_detection.preprocess import preprocessing
 
 class dataLoader():
     '''
@@ -52,7 +52,7 @@ class dataLoader():
             vertical_flip = config.AUGMENTATIONS['vertical_flip'],
             zoom_range = config.AUGMENTATIONS['zoom_range'],
             fill_mode='constant',
-            cval = 0 # new area caused by augmentations are black
+            cval = 0 # new areas caused by augmentations are black
         )
         
         # init for future use
@@ -72,14 +72,17 @@ class dataLoader():
         # use either the training or validation sets 
         if self.mode in ['TRAIN', 'TEST_TRAINING_DATA']:
             data_dirs = self.config.TRAINING_DIRS
+            label_name = 'training_labels.xml'
         else:
             data_dirs = self.config.VALIDATION_DIRS
+            label_name = 'validation_labels.xml'
 
         # go through every directory
         for directory in data_dirs:
+            data_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/' , 2)[0] + '/scripts/' +  directory['dir_path']
             if directory['class'] == 'weld':
-                label_path = directory['dir_path'].split("/")[0:-1]
-                label_path.append("labels.xml")
+                label_path = data_path.split("/")[0:-1]
+                label_path.append(label_name)
                 label_path = "/".join(label_path)
 
                 # convert labels.xml into contours
@@ -98,16 +101,16 @@ class dataLoader():
                     fnames = fnames[::skip_interval]
 
                 # get the full path for file names
-                fnames = ['{0}/{1}'.format(directory['dir_path'], fname) for fname in fnames]
+                fnames = ['{0}/{1}'.format(data_path, fname) for fname in fnames]
 
             elif directory['class'] == 'background':
-                fnames = os.listdir(directory['dir_path'])
-                fnames = [directory['dir_path'] + '/' + fname for fname in fnames]
+                fnames = os.listdir(data_path)
+                fnames = [data_path + '/' + fname for fname in fnames]
                 
             else:
                 print('Invalid class')
 
-            print('[Loading] {} paths from {}.'.format(len(fnames),  directory['dir_path'].split('/')[4]))
+            print('[Loading] {} paths from {}.'.format(len(fnames),  directory['dir_path'].split('/')[-2]))
 
             self.data_paths.extend(fnames)
         
@@ -265,7 +268,7 @@ class dataLoader():
         Serves up the images and applies preprocessing, augmentation, and background reduction.
         Batches will be returned as a numpy array of shape batch_size x height x width x number of channels.
         '''
-        # cycle through all the data paths 
+        # cycle through all the data paths
         data_path_cycler = cycle(self.data_paths) 
 
         # generator goes on forever
@@ -281,7 +284,6 @@ class dataLoader():
                 # load in image and draw lines on label
                 try:
                     img_data = cv2.imread(file_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
-                    
                 except:
                     continue
 
@@ -291,7 +293,7 @@ class dataLoader():
                 # genereate the label
                 try:
                     key = file_path.split('/')
-                    key = key[4] + '/' + key[-1]
+                    key = key[-3] + '/' + key[-1]
                     label_contours = self.xml_labels[key]
                     label = np.zeros((img_data.shape[0], img_data.shape[1])).astype(np.float32)
                     for contour in label_contours['contour']:

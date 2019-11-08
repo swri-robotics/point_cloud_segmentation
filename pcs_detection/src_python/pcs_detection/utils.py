@@ -42,7 +42,7 @@ def get_labels_from_xml(label_path):
     
     # name of the outer directory this label corresponds to
     # allows for images in different directories to have the same filename 
-    dataset_name = label_path.split('/')[4]
+    dataset_name = label_path.split('/')[-2]
 
     for image_tag in root.iter('image'):
         image = {}
@@ -51,8 +51,8 @@ def get_labels_from_xml(label_path):
         for key, value in image_tag.items():
             image[key] = value
 
-        #make the name only be the image name with the .tiff ending
-
+        #keys will be collection folder combined with each images
+        #this allows for images in different folders to have the same name
         image['name'] = dataset_name + '/' + image['name']
 
         image['contour'] = list()

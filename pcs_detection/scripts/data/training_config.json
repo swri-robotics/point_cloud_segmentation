@@ -1,0 +1,69 @@
+{
+    "MODE": "TRAIN",
+    "WEIGHT_ID": "new_repo_test",
+    "WEIGHT_DIR": "data/weights",
+
+    "MODEL": "fcn8",
+
+    "CHANNEL": "GREY",
+    "CONFIDENCE_THRESHOLD": 0.2,
+
+    "LEARNING_RATE": {
+        "reduce_patience": 1,
+        "start": 0.008,
+        "end": 0.0001,
+        "reduce_factor": 0.6
+    },
+
+    "N_EPOCHS": 3,
+    "BATCH_SIZE": 8,
+
+    "AUGMENTATIONS": {
+        "number_aug": 10,
+        "horizontal_flip": true,
+        "brightness_range": null,
+        "rotation_range": 45,
+        "vertical_flip": true,
+        "zoom_range": 0.2
+    },
+    "MIN_PIXELS_IN_IMG": 100,
+    "LABEL_THICKNESS": 5,
+    "BACKGROUND_REDUCTION": 30,
+    "IMG_DIMS": [
+        256,
+        256
+    ],
+
+    "PRE_PROCESS": {
+        "rgb": [
+            182.11864,
+            155.26283,
+            107.5
+        ],
+        "edge": [
+            0,
+            3
+        ],
+        "grey": [
+            117
+        ]
+    },
+    
+    "USE_FULL_IMAGE": false,
+    "DISPLAY_SCALE_FACTOR": 1.25,
+
+    "TRAINING_DIRS": [
+        {
+            "dir_path": "data/aluminum_3/training",
+            "num_imgs": "all",
+            "class": "weld"
+        }
+    ],
+    "VALIDATION_DIRS": [
+        {
+            "dir_path": "data/aluminum_3/validation",
+            "num_imgs": "all",
+            "class": "weld"
+        }
+    ]
+}
