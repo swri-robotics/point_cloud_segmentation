@@ -25,13 +25,8 @@
           <id>205</id>
           <start>0</start>
           <stop>21</stop>
-          <url>http://129.162.108.53:8080/?id=205</url>
         </segment>
       </segments>
-      <owner>
-        <username>admin</username>
-        <email>ryan.mcbee@swri.org</email>
-      </owner>
     </task>
     <dumped>2019-10-08 23:40:39.732997+03:00</dumped>
   </meta>
