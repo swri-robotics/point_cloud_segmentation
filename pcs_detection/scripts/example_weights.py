@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 '''
- * @file fcn8_train.py
- * @brief Used for training neural nets, and view the images passed into the network after preprocessing
+ * @file fcn8_validate.py
+ * @brief Used for viewing the predicitions of trained nets on the validation set
  *
  * @author Jake Janssen
- * @date November 6, 2019
+ * @date November 8, 2019
  * @version TODO
  * @bug No known bugs
  *
@@ -27,7 +27,7 @@
 
 import json
 import os        
-from src_python.pcs_detection.process import test_dataloader, train
+from pcs_detection.process import validate
 
 
 class Config:
@@ -37,14 +37,11 @@ class Config:
 if __name__ == '__main__':
     # Import Config json file and convert into format we need
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    with open(dir_path + '/training_config.json') as json_data_file:
+    with open(dir_path + '/data/weights/<weight_file_dir_name>/full_config.json') as json_data_file:
         data = json.load(json_data_file)
     config = Config(**data)
 
-    # run the training process specified in the config
-    if config.MODE == 'TEST_TRAINING_DATA':
-        test_dataloader(config)
-    elif config.MODE == 'TRAIN':
-        train(config)
+    if 'VAL_WEIGHT_PATH' in config.__dict__.keys():
+        validate(config)
     else:
-        print('Not a valid mode')
+        print('This config does not have an associated weight file')

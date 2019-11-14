@@ -1,12 +1,12 @@
 {
     "MODE": "TRAIN",
-    "WEIGHT_ID": "new_repo_test",
+    "WEIGHT_ID": "repo_test_2",
     "WEIGHT_DIR": "data/weights",
 
     "MODEL": "fcn8",
 
     "CHANNEL": "GREY",
-    "CONFIDENCE_THRESHOLD": 0.2,
+    "CONFIDENCE_THRESHOLD": 0.5,
 
     "LEARNING_RATE": {
         "reduce_patience": 1,
@@ -54,14 +54,24 @@
 
     "TRAINING_DIRS": [
         {
-            "dir_path": "data/aluminum_3/training",
+            "dir_path": "data/example_dataset_1/training",
+            "num_imgs": "all",
+            "class": "weld"
+        },
+        {
+            "dir_path": "data/example_dataset_2/training",
             "num_imgs": "all",
             "class": "weld"
         }
     ],
     "VALIDATION_DIRS": [
         {
-            "dir_path": "data/aluminum_3/validation",
+            "dir_path": "data/example_dataset_1/validation",
+            "num_imgs": "all",
+            "class": "weld"
+        },
+        {
+            "dir_path": "data/example_dataset_2/validation",
             "num_imgs": "all",
             "class": "weld"
         }

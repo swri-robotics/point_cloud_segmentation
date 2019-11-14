@@ -408,10 +408,11 @@ class fcn8():
         model = Model(input_image, upscore8n)
         model_prob = Model(input_image, upscore_out)
 
-        # use sgd for optimizer (could try adam too)
-        sgd = optimizers.SGD(lr=self.config.LEARNING_RATE['start'], momentum=0.9)
+
 
         if not val:
+            # use sgd for optimizer (could try adam too)
+            sgd = optimizers.SGD(lr=self.config.LEARNING_RATE['start'], momentum=0.9)
             model.compile(
                             optimizer=sgd,
                             loss = self.sparse_loss,

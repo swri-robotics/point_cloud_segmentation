@@ -37,17 +37,27 @@
         256
     ],
     "USE_FULL_IMAGE": false,
-    "VAL_WEIGHT_PATH": "38.h5",
+    "VAL_WEIGHT_PATH": "/mnt/project_share/Weld_Detection/weld_weights/using_negatives/fcn8_GREY_19_10_10_101037/38.h5",
     "TRAINING_DIRS": [
         {
-            "dir_path": "data/aluminum_3/training",
+            "dir_path": "data/example_dataset_1/training",
+            "num_imgs": "all",
+            "class": "weld"
+        },
+        {
+            "dir_path": "data/example_dataset_2/training",
             "num_imgs": "all",
             "class": "weld"
         }
     ],
     "VALIDATION_DIRS": [
         {
-            "dir_path": "data/aluminum_3/validation",
+            "dir_path": "data/example_dataset_1/validation",
+            "num_imgs": "all",
+            "class": "weld"
+        },
+        {
+            "dir_path": "data/example_dataset_2/validation",
             "num_imgs": "all",
             "class": "weld"
         }
@@ -56,5 +66,6 @@
     "DISPLAY_SCALE_FACTOR": 1.25,
     "BATCH_SIZE": 8,
     "SAVE_MODEL": true,
-    "CHANNEL": "GREY"
+    "CHANNEL": "GREY",
+    "CONFIDENCE_THRESHOLD": 0.5
 }

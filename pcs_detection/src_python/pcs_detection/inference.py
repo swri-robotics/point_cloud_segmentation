@@ -24,11 +24,11 @@
  '''
 
 import numpy as np
-from src_python.pcs_detection.preprocess import preprocessing
+from pcs_detection.preprocess import preprocessing
 
 class Inference():
     '''
-    Edits the config based on the validation weights and builds the model
+    Edits the config bas ded on the validation weights and builds the model
     '''
     def __init__(self, config):
                 

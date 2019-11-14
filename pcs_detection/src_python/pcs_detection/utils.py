@@ -83,9 +83,9 @@ def get_labels_from_xml(label_path):
     
     return anno
 
-def dump_config(config):
+def dump_validation_config(config):
     '''
-    Save the current config in the same folder in the model weights.
+    Save the config used to train in the same folder in the model weights.
     This config can later be used to apply the same preprocessing, and model selection
     that was used in training 
     '''
@@ -97,12 +97,29 @@ def dump_config(config):
                 config_dump[key] = config.__getattribute__(key)
             except:
                 pass
-    save_path = os.path.join(os.path.split(config.WEIGHT_SAVE_PATH)[0],'config.json')
+    save_path = os.path.join(os.path.split(config.WEIGHT_SAVE_PATH)[0],'full_config.json')
+    with open(save_path, 'w') as outfile:
+        json.dump(config_dump, outfile, indent=4) 
+
+def dump_inference_config(config):
+    '''
+    Save a config used for inference in the same folder as the weights.
+    '''
+    wanted_keys = ['MODEL', 'VAL_WEIGHT_PATH', 'BATCH_SIZE', 'MODE', 'DISPLAY_SCALE_FACTOR', 'CHANNEL', 'PRE_PROCESS', 'CONFIDENCE_THRESHOLD']
+    config_dump = {}
+    for  key in config.__dict__:
+        if key in wanted_keys:
+            try:
+                config_dump[key] = config.__getattribute__(key)
+            except:
+                pass
+    save_path = os.path.join(os.path.split(config.WEIGHT_SAVE_PATH)[0],'inference_config.json')
     print('_____CONFIG______')
     print(config_dump)
     print('_________________')
     with open(save_path, 'w') as outfile:
         json.dump(config_dump, outfile, indent=4) 
+
 
 def resize(image, scale_factor):
     '''

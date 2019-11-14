@@ -30,8 +30,8 @@ import random
 from itertools import cycle
 import cv2
 import numpy as np
-from src_python.pcs_detection.utils import get_labels_from_xml
-from src_python.pcs_detection.preprocess import preprocessing
+from pcs_detection.utils import get_labels_from_xml
+from pcs_detection.preprocess import preprocessing
 
 class dataLoader():
     '''

@@ -35,9 +35,9 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import time
-from src_python.pcs_detection.data_loader import dataLoader
-from src_python.pcs_detection.preprocess import preprocessing
-from src_python.pcs_detection.utils import histogram, minMaxNormalize, resize, dump_config
+from pcs_detection.data_loader import dataLoader
+from pcs_detection.preprocess import preprocessing
+from pcs_detection.utils import histogram, minMaxNormalize, resize, dump_validation_config, dump_inference_config
 
 def train(config):
     '''
@@ -123,8 +123,8 @@ def train(config):
             best_weights_file = file 
     config.VAL_WEIGHT_PATH = os.path.join(weights_dir,best_weights_file)
     config.MODE = 'VALIDATE'
-    dump_config(config)
-
+    dump_validation_config(config)
+    dump_inference_config(config)
     # Display and save training curves 
     fig = plt.figure()
     axis1 = fig.add_subplot(311)

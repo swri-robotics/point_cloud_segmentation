@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>231</id>
+      <name>alum_val_1</name>
+      <size>10</size>
+      <mode>annotation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <flipped>False</flipped>
+      <created>2019-10-04 00:22:26.188456+03:00</created>
+      <updated>2019-10-04 00:25:09.939912+03:00</updated>
+      <source>10 images: 0003.png, 0017.png, ...</source>
+      <labels>
+        <label>
+          <name>crude</name>
+          <attributes>
+          </attributes>
+        </label>
+      </labels>
+      <segments>
+        <segment>
+          <id>202</id>
+          <start>0</start>
+          <stop>9</stop>
+          <url>http://129.162.108.53:8080/?id=202</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>admin</username>
+        <email>ryan.mcbee@swri.org</email>
+      </owner>
+    </task>
+    <dumped>2019-10-04 00:25:14.905545+03:00</dumped>
+  </meta>
+  <image id="0" name="0003.png" width="640" height="480">
+    <polyline label="crude" points="384.75,398.60;450.54,405.05" occluded="0">
+    </polyline>
+    <polyline label="crude" points="375.72,364.63;383.03,395.59" occluded="0">
+    </polyline>
+  </image>
+  <image id="1" name="0017.png" width="640" height="480">
+    <polyline label="crude" points="340.08,140.66;519.45,171.40" occluded="0">
+    </polyline>
+  </image>
+  <image id="2" name="0019.png" width="640" height="480">
+    <polyline label="crude" points="313.31,147.70;315.56,146.49;317.81,144.94;320.22,144.07;322.64,143.38;325.75,142.69;328.17,142.17;330.77,142.17;333.70,141.83;335.95,141.48;338.89,141.13;341.31,141.31;344.07,142.00;346.66,143.04;349.08,144.07;351.50,145.11;353.92,146.15;356.69,147.01;358.59,149.08" occluded="0">
+    </polyline>
+    <polyline label="crude" points="312.79,148.22;310.72,149.08;308.30,150.64;306.57,152.71;305.02,154.96;303.98,157.38" occluded="0">
+    </polyline>
+    <polyline label="crude" points="314.00,177.60;316.25,178.81;318.67,179.32;321.43,179.50;324.20,179.67;326.96,179.50;329.56,179.32;332.15,178.98;334.74,178.29;336.47,177.60;339.58,176.39;342.34,175.52;344.76,174.66;347.53,172.93;349.43,171.20" occluded="0">
+    </polyline>
+  </image>
+  <image id="3" name="0059.png" width="640" height="480">
+    <polyline label="crude" points="216.42,209.75;367.99,226.32" occluded="0">
+    </polyline>
+  </image>
+  <image id="4" name="0074.png" width="640" height="480">
+    <polyline label="crude" points="438.25,380.71;520.71,284.80" occluded="0">
+    </polyline>
+  </image>
+  <image id="6" name="0081.png" width="640" height="480">
+    <polyline label="crude" points="39.28,145.74;155.07,68.55" occluded="0">
+    </polyline>
+  </image>
+  <image id="7" name="0094.png" width="640" height="480">
+    <polyline label="crude" points="427.40,102.70;413.03,233.37" occluded="0">
+    </polyline>
+  </image>
+  <image id="8" name="0114.png" width="640" height="480">
+    <polyline label="crude" points="249.94,150.88;461.06,223.39" occluded="0">
+    </polyline>
+  </image>
+  <image id="9" name="0116.png" width="640" height="480">
+    <polyline label="crude" points="308.90,177.80;510.90,186.20" occluded="0">
+    </polyline>
+  </image>
+</annotations>
