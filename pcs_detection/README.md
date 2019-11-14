@@ -1,3 +1,8 @@
+# Data Requirements 
+    Training subsets must contain a folder holding images and a training_labels.xml file. 
+    Images must all have the same dimesnions. 
+    Images not used for training must be 480 x 640. 
+
 # Config Descriptions
 
 ### training_config.json:
