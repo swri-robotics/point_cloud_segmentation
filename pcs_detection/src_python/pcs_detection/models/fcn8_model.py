@@ -127,7 +127,6 @@ class fcn8():
             
         loss=0
         for cls in range(0,nb_class):
-            tf.print('Hello')
             d = y_true
             d = tf.Print(d, [d], "Inside loss function")
             d = tf.Print(d, [d], str(tf.shape(y_true)))

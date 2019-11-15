@@ -82,7 +82,7 @@ def preprocessing(img_data, config):
     elif config.CHANNEL == 'GREY':
         dataset_means = config.PRE_PROCESS['grey']
     elif config.CHANNEL == 'COMBINED':
-        dataset_means = config.PRE_PROCESS['grey'].copy()
+        dataset_means = config.PRE_PROCESS['grey'][:]
         dataset_means.append(config.PRE_PROCESS['edge'][0])
     elif config.CHANNEL == 'STACKED':
         dataset_means = config.PRE_PROCESS['grey']
