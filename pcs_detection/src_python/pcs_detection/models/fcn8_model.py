@@ -168,8 +168,8 @@ class fcn8():
 
     def build_model(self, val = False, val_weights = None):
         # welds and background
-        num_class = 2
-        if self.config.CHANNEL == 'RGB':
+        num_class = 4
+        if self.config.CHANNEL == 'RGB' or self.config.CHANNEL == 'LAB' or self.config.CHANNEL == 'YCR_CB':
             num_channels = 3
         elif self.config.CHANNEL == 'THERMAL' or self.config.CHANNEL == 'GREY' or self.config.CHANNEL == 'STACKED':
             num_channels = 1

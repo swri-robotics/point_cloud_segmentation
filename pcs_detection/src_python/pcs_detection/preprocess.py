@@ -34,11 +34,25 @@ def preprocessing(img_data, config):
     '''
 
     # even single channel images must have three dimensions 
-    if config.CHANNEL != 'RGB':
+    if config.CHANNEL != 'RGB' and config.CHANNEL != 'LAB'  and config.CHANNEL != 'YCR_CB':
         img_data = img_data[:,:,0]
 
     if len(img_data.shape) == 2:
         img_data = np.expand_dims(img_data, axis=-1)
+
+    if config.CHANNEL == 'LAB':
+        img_data = img_data.astype(np.float32)
+        img_data /= 255
+        img_data = cv2.cvtColor(img_data.astype(np.float32), cv2.COLOR_BGR2LAB)
+        channels=cv2.split(img_data)
+        img_data = img_data.astype(np.float32)
+
+    elif config.CHANNEL == 'YCR_CB':
+        ycrcb=cv2.cvtColor(img_data.astype(np.uint8),cv2.COLOR_BGR2YCR_CB)
+        channels=cv2.split(ycrcb)
+        channels[0] = cv2.equalizeHist(channels[0].astype(np.uint8),channels[0].astype(np.uint8))
+        img_data = cv2.merge(channels)
+        img_data = img_data.astype(np.float32)
 
     # add the laplacian as a second channel 
     if config.CHANNEL == 'COMBINED':
@@ -71,6 +85,10 @@ def preprocessing(img_data, config):
         dataset_means.append(config.PRE_PROCESS['edge'][0])
     elif config.CHANNEL == 'STACKED':
         dataset_means = config.PRE_PROCESS['grey']
+    elif config.CHANNEL == 'LAB':
+        dataset_means = config.PRE_PROCESS['lab']
+    elif config.CHANNEL == 'YCR_CB':
+        dataset_means = config.PRE_PROCESS['ycr']
 
     else:
         print('Invalid channel')
