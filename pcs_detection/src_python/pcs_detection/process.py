@@ -35,9 +35,9 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import time
-from pcs_detection.data_loader import dataLoader
-from pcs_detection.preprocess import preprocessing
-from pcs_detection.utils import histogram, minMaxNormalize, resize, dump_validation_config, dump_inference_config
+from src_python.pcs_detection.data_loader import dataLoader
+from src_python.pcs_detection.preprocess import preprocessing
+from src_python.pcs_detection.utils import histogram, minMaxNormalize, resize, dump_validation_config, dump_inference_config, colorTriLabel, colorPrediction, LABtoBGR, get_colors
 
 def train(config):
     '''
@@ -165,9 +165,9 @@ def validate(config):
     '''
    
     if config.MODEL == 'fcn8':
-        from src_python.pcs_detection.models.fcn8_model import fcn8
+        from pcs_detection.models.fcn8_model import fcn8
     elif config.MODEL == 'fcn_reduced':
-        from src_python.pcs_detection.models.fcn8_reduced import fcn8
+        from pcs_detection.models.fcn8_reduced import fcn8
 
     # always validate on full image
     config.USE_FULL_IMAGE = True
@@ -192,16 +192,24 @@ def validate(config):
         print('Prediction Time:', end-start)
 
         for ii in range(img_batch.shape[0]):
-            try:
-                prediction = (pred[ii, :, :, 1] - pred[ii, :, :, 0]) #subtract difference between background and foreground
-                prediction = prediction * np.argmax(pred[ii],axis=-1) #only get the area that is interresting
-                prediction = ((prediction - prediction.min()) / prediction[prediction != 0].ptp()) * 255 #scale up
-                prediction = prediction.astype(np.uint8) #convert to uint8
-            except:
-                prediction = prediction.astype(np.uint8) #convert to uint8
-                
+
             image = img_batch[ii]
             label = label_batch[ii]
+
+            # convert the image back to bgr if needed 
+            if config.CHANNEL == 'LAB':
+                image = LABtoBGR(image, config)
+
+            elif config.CHANNEL == 'YCR_CB':
+                image += np.asarray(config.PRE_PROCESS['ycr'])
+                image = cv2.cvtColor(image,cv2.COLOR_YCR_CB2BGR)
+
+            colors = get_colors(len(config.CLASS_NAMES))
+
+            image = minMaxNormalize(image)
+            if image.shape[-1] != 3:
+                image = cv2.merge((image, image, image))
+            colored_predicition = colorPrediction(pred[ii], image, colors)
 
             if config.CHANNEL == 'COMBINED':
                 edge = minMaxNormalize(image[:,:,-1:image.shape[2]]).astype(np.uint8)
@@ -209,24 +217,11 @@ def validate(config):
                 cv2.imshow('edge', edge)
 
             # normalize image to be between 0 and 255 
-            image = minMaxNormalize(image)
-
-            # overylay to view label on image
-            overlay = np.zeros((image.shape[0], image.shape[1], 3)).astype(np.uint8)
-            overlay[:,:,0] = image[:,:,0]
-            overlay[:,:,1] = image[:,:,0]
-            overlay[:,:,2] = image[:,:,0]
-            #overlay[label[:,:,1] == 1] = (0,0,255)
-
-            _, contours, _ = cv2.findContours(prediction,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
-            # draw red contours on the rgb image 
-            cv2.drawContours(overlay, contours, -1, (7,24,194), -1)
+            display_label = colorTriLabel(label, colors)
 
             cv2.imshow('img', resize(image, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('label', resize(label, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('pred overlay', resize(overlay, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('prediction', resize(prediction, config.DISPLAY_SCALE_FACTOR))
+            cv2.imshow('label', resize(display_label, config.DISPLAY_SCALE_FACTOR))
+            cv2.imshow('pred overlay', resize(colored_predicition, config.DISPLAY_SCALE_FACTOR))
             key = cv2.waitKey(0)
             # press q to quit the imshows 
             if 'q' == chr(key & 255):
@@ -245,30 +240,40 @@ def test_dataloader(config):
         img_batch, label_batch = next(gen)
 
         for ii in range(len(img_batch)):
+
             image = img_batch[ii,:,:,:]
             label = label_batch[ii,:,:,:]
 
             # want a mean within a std of zero
             histogram(image)
 
+            if config.CHANNEL == 'LAB':
+                image = LABtoBGR(image, config)
+
+            elif config.CHANNEL == 'YCR_CB':
+                image += np.asarray(config.PRE_PROCESS['ycr'])
+                image = cv2.cvtColor(image,cv2.COLOR_YCR_CB2BGR)
+
             if config.CHANNEL == 'COMBINED':
                 edge = minMaxNormalize(image[:,:,-1:image.shape[2]]).astype(np.uint8)
                 image = image[:,:,0:image.shape[-1]-1]
                 cv2.imshow('edge', edge)
 
+            colors = get_colors(len(config.CLASS_NAMES))
+            display_label = colorTriLabel(label, colors)
+
             # normalize image to be between 0 and 255 
             image = minMaxNormalize(image)
 
             # overylay to view label on image
-            overlay = np.zeros((image.shape[0], image.shape[1], 3)).astype(np.uint8)
-            overlay[:,:,0] = image[:,:,0]
-            overlay[:,:,1] = image[:,:,0]
-            overlay[:,:,2] = image[:,:,0]
-
-            overlay[label[:,:,1] == 1] = (0,0,255)
+            if image.shape[-1] != 3:
+                image = cv2.merge((image, image, image))
+            overlay = image.copy()
+            overlay_label = label.copy()
+            overlay = colorPrediction(overlay_label, overlay, colors)
 
             cv2.imshow('img', resize(image, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('label', resize(label, config.DISPLAY_SCALE_FACTOR))
+            cv2.imshow('label', resize(display_label, config.DISPLAY_SCALE_FACTOR))
             cv2.imshow('overlay', resize(overlay, config.DISPLAY_SCALE_FACTOR))
             key = cv2.waitKey(0)
             # press q to quit the imshows 

@@ -85,3 +85,4 @@ class Inference():
         prediction = prediction[0]
 
         return prediction
+        

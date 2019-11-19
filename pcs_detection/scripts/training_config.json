@@ -1,11 +1,14 @@
 {
     "MODE": "TRAIN",
-    "WEIGHT_ID": "repo_test_2",
+    "WEIGHT_ID": "unique_id",
     "WEIGHT_DIR": "data/weights",
 
     "MODEL": "fcn8",
 
     "CHANNEL": "GREY",
+
+    "CLASS_NAMES": ["weld"],
+
     "CONFIDENCE_THRESHOLD": 0.5,
 
     "LEARNING_RATE": {
@@ -15,7 +18,7 @@
         "reduce_factor": 0.6
     },
 
-    "N_EPOCHS": 3,
+    "N_EPOCHS": 100,
     "BATCH_SIZE": 8,
 
     "AUGMENTATIONS": {
@@ -24,14 +27,21 @@
         "brightness_range": null,
         "rotation_range": 45,
         "vertical_flip": true,
-        "zoom_range": 0.2
+        "zoom_range": 0.3
     },
     "MIN_PIXELS_IN_IMG": 100,
+
     "LABEL_THICKNESS": 5,
-    "BACKGROUND_REDUCTION": 30,
+
+    "BACKGROUND_REDUCTION": 2,
+
     "IMG_DIMS": [
         256,
         256
+    ],
+    "ORIG_DIMS": [
+        480,
+        640
     ],
 
     "PRE_PROCESS": {
@@ -46,10 +56,20 @@
         ],
         "grey": [
             117
+        ],
+        "ycr": [
+            123,
+            126,
+            120
+        ],
+        "lab": [
+            50,
+            0.1,
+            1.5
         ]
     },
     
-    "USE_FULL_IMAGE": false,
+    "USE_FULL_IMAGE": true,
     "DISPLAY_SCALE_FACTOR": 1.25,
 
     "TRAINING_DIRS": [

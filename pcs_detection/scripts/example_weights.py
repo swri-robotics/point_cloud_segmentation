@@ -37,7 +37,7 @@ class Config:
 if __name__ == '__main__':
     # Import Config json file and convert into format we need
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    with open(dir_path + '/data/weights/<weight_file_dir_name>/full_config.json') as json_data_file:
+    with open(dir_path + '/data/weights/<weight_path>/full_config.json') as json_data_file:
         data = json.load(json_data_file)
     config = Config(**data)
 

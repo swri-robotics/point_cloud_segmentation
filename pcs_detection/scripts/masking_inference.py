@@ -34,7 +34,7 @@ import json
 import os
 
 # Inference module
-from src_python.pcs_detection.inference import Inference
+from pcs_detection.inference import Inference
 
 # Hack because code was originally written to have configs as Python modules
 class Config:
@@ -45,7 +45,7 @@ if __name__ == '__main__':
   # Import Config json file and convert into format we need
   dir_path = os.path.dirname(os.path.realpath(__file__))
   
-  with open(dir_path + '/data/weights/ycr_cb/inference_config.json') as json_data_file:
+  with open(dir_path + '/data/weights/<weight_path>/inference_config.json') as json_data_file:
       data = json.load(json_data_file)
   config = Config(**data)
 

@@ -42,7 +42,7 @@ if __name__ == '__main__':
     config = Config(**data)
 
     # run the training process specified in the config
-    if config.MODE == 'TEST_TRAINING_DATA':
+    if config.MODE == 'DEBUG':
         test_dataloader(config)
     elif config.MODE == 'TRAIN':
         train(config)

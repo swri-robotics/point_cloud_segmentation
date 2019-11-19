@@ -47,7 +47,7 @@ class dataLoader():
         # used for augmentations
         self.datagen = ImageDataGenerator(
             rotation_range=config.AUGMENTATIONS["rotation_range"],
-            brightness_range = config.AUGMENTATIONS['brightness_range'],
+            brightness_range = None,
             horizontal_flip = config.AUGMENTATIONS['horizontal_flip'],
             vertical_flip = config.AUGMENTATIONS['vertical_flip'],
             zoom_range = config.AUGMENTATIONS['zoom_range'],
@@ -70,7 +70,7 @@ class dataLoader():
         self.data_paths = []
     
         # use either the training or validation sets 
-        if self.mode in ['TRAIN', 'TEST_TRAINING_DATA']:
+        if self.mode in ['TRAIN', 'DEBUG']:
             data_dirs = self.config.TRAINING_DIRS
             label_name = 'training_labels.xml'
         else:
@@ -79,8 +79,10 @@ class dataLoader():
 
         # go through every directory
         for directory in data_dirs:
-            data_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/' , 2)[0] + '/scripts/' +  directory['dir_path']
-            if directory['class'] == 'weld':
+            
+            data_path = directory['dir_path']
+            #data_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/' , 2)[0] + '/scripts/' +  directory['dir_path']
+            if directory['labels']:
                 label_path = data_path.split("/")[0:-1]
                 label_path.append(label_name)
                 label_path = "/".join(label_path)
@@ -92,25 +94,21 @@ class dataLoader():
                 # get all file names in the directory 
                 fnames = list(labels.keys())
                 fnames = [fname.split('/')[-1] for fname in fnames]
-
-                if directory['num_imgs'] != 'all':
-                    # calculate the number of interval for to get num_imgs of files evenly spaced out
-                    skip_interval = round(len(fnames) / directory['num_imgs'])
-
-                    # fnames now holds all the files of interest
-                    fnames = fnames[::skip_interval]
-
-                # get the full path for file names
-                fnames = ['{0}/{1}'.format(data_path, fname) for fname in fnames]
-
-            elif directory['class'] == 'background':
+            else:
                 fnames = os.listdir(data_path)
                 fnames = [data_path + '/' + fname for fname in fnames]
-                
-            else:
-                print('Invalid class')
+
+
+            if directory['num_imgs'] != 'all':
+                # calculate the number of interval for to get num_imgs of files evenly spaced out
+                skip_interval = round(len(fnames) / directory['num_imgs'])
+                # fnames now holds all the files of interest
+                fnames = fnames[::skip_interval]
 
             print('[Loading] {} paths from {}.'.format(len(fnames),  directory['dir_path'].split('/')[-2]))
+
+            # get the full path for file names
+            fnames = ['{0}/{1}'.format(data_path, fname) for fname in fnames]
 
             self.data_paths.extend(fnames)
         
@@ -129,12 +127,12 @@ class dataLoader():
         Ignore mask will be created around the weld mask.
         '''
         # multi label will store the annotations, background, and ignore mask
-        multi_label = np.zeros((label.shape[0], label.shape[1], 3))
+        multi_label = np.zeros((label.shape[0], label.shape[1], len(self.config.CLASS_NAMES) + 2))
 
         # create the background mask
         background_mask = np.zeros((label.shape[0], label.shape[1]),  dtype=np.float32)
         kernel = np.ones((5,5),np.uint8)
-        bin_label = label.copy()
+        bin_label = np.sum(label, axis = -1)
         # convert the image to 2bit so it plays nice with dilate 
         bin_label[bin_label>0] = 1
         # dialate the label to create the area that will be ignored
@@ -148,16 +146,17 @@ class dataLoader():
         background_mask[background_mask > 0] = 1
         label[label > 0] = 1
 
-        # background cannot intersect with label
-        background_mask[label == 1] = 0
-        # ignore mask is everything that is not background or label
         ignore_mask[background_mask == 0] = 1
-        ignore_mask[label==1] = 0
+
+        # background cannot intersect with label
+        for cnt in range(len(self.config.CLASS_NAMES)):
+            background_mask[label[:,:,cnt] == 1] = 0            
+            ignore_mask[label[:,:,cnt] ==1 ] = 0
 
         # assign values to the multi label 
         multi_label[:, :, 0] = background_mask
-        multi_label[:, :, 1] = label
-        multi_label[:, :, 2] = ignore_mask
+        multi_label[:, :, 1:-1] = label
+        multi_label[:, :, -1] = ignore_mask
 
         return multi_label.astype(np.float32)
 
@@ -172,9 +171,13 @@ class dataLoader():
         background_px_per_img = (label_px_batch/imgs_per_batch) * self.config.BACKGROUND_REDUCTION
 
         # if the whole batch is background then leave then make it all ignore
+        if (label_px_batch == 0) and (self.mode in ['TRAIN', 'TEST_TRAINING_DATA', 'CLASS_METRICS']):
+            return None
+
+        # if the whole batch is background then leave then make it all ignore
         if label_px_batch == 0:
             label_batch[:,:,:,0] = 0
-            label_batch[:,:,:,2] = 1
+            label_batch[:,:,:,-1] = 1
             return label_batch
 
         for ii in range(imgs_per_batch):
@@ -193,7 +196,7 @@ class dataLoader():
                 idx = random.randint(0,background_pxls)
                 # remove background labels and add to the ignore mask
                 label_batch[ii,rows[replace_idxs],columns[replace_idxs],0] = 0
-                label_batch[ii,rows[replace_idxs],columns[replace_idxs],2] = 1
+                label_batch[ii,rows[replace_idxs],columns[replace_idxs],-1] = 1
       
         return label_batch
 
@@ -263,6 +266,17 @@ class dataLoader():
 
             return trimmed_image, trimmed_label
 
+    def brightness_augmentation(self, img_data):
+        '''
+        Converts an bgr image to hsv and lowers the value 
+        '''
+        hsv_img = cv2.cvtColor(img_data, cv2.COLOR_BGR2HSV)
+        scaling_factor = np.random.uniform(self.config.AUGMENTATIONS['brightness_range'][0], self.config.AUGMENTATIONS['brightness_range'][1])
+        hsv_img[:,:,2] *= scaling_factor
+        scaled_rgb_img = cv2.cvtColor(hsv_img, cv2.COLOR_HSV2BGR)
+        img_data = scaled_rgb_img
+        return img_data
+
     def generate(self):
         '''
         Serves up the images and applies preprocessing, augmentation, and background reduction.
@@ -284,10 +298,15 @@ class dataLoader():
                 # load in image and draw lines on label
                 try:
                     img_data = cv2.imread(file_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+                    # resize different resolution images to the right size (loses aspect ratio)
+                    img_data = cv2.resize(img_data, (self.config.ORIG_DIMS[1], self.config.ORIG_DIMS[0]))
                 except:
                     continue
 
-                # apply any laplacian preprocessing and mean subtraction
+                if (self.mode not in ['VALIDATION', "DEMO_VIDEO"]) and (self.config.AUGMENTATIONS['brightness_range'] is not None) and (img_data.shape[-1] == 3):
+                    img_data = self.brightness_augmentation(img_data)
+
+                # apply  preprocessing and mean subtraction
                 img_data = preprocessing(img_data, self.config)
                 
                 # genereate the label
@@ -295,15 +314,21 @@ class dataLoader():
                     key = file_path.split('/')
                     key = key[-3] + '/' + key[-1]
                     label_contours = self.xml_labels[key]
-                    label = np.zeros((img_data.shape[0], img_data.shape[1])).astype(np.float32)
-                    for contour in label_contours['contour']:
-                        #cv2.drawContours(label, [contour], -1, (255, 255, 255), -1)
-                        cv2.polylines(label, [contour], False, 1, self.config.LABEL_THICKNESS)
-
-                    multi_label = self.create_multi_label(label)
+                    label = np.zeros((img_data.shape[0], img_data.shape[1], len(self.config.CLASS_NAMES))).astype(np.float64)
+                    for cnt, user_label in enumerate(self.config.CLASS_NAMES):
+                        temp = np.zeros((label.shape[0],label.shape[1]))
+                        for contour in label_contours[user_label]:
+                            poly_type = contour[1]
+                            if poly_type == 'polyline':
+                                cv2.polylines(temp, [contour[0]], False, 1, self.config.LABEL_THICKNESS)
+                            elif poly_type == 'polygon':
+                                cv2.drawContours(temp, [contour[0]], -1, 1, -1)
+                            label[:,:,cnt] = temp
+                    multi_label = self.create_multi_label(label) 
+                    
                 # will fail on background
                 except:
-                    multi_label = np.zeros((img_data.shape[0], img_data.shape[1], 3))
+                    multi_label = np.zeros((img_data.shape[0], img_data.shape[1], len(self.config.CLASS_NAMES) + 2))
                     multi_label[:,:,0] = 1
 
                 # pick a random tile from the image
@@ -311,11 +336,12 @@ class dataLoader():
                     img_data, multi_label = self.tile_image(img_data, multi_label)
 
                 # add augmented image and label into the batch
+
                 img_batch.append(img_data)
                 label_batch.append(multi_label)
                 batch_cnt += 1 
                 
-            img_batch = np.asarray(img_batch)
+            img_batch = np.asarray(img_batch)                
             label_batch = np.asarray(label_batch)
 
             # image and label augmentations use the same seed to keep in sync
@@ -336,6 +362,10 @@ class dataLoader():
 
             # reduce the number of background pixels
             aug_label = self.reduce_background_label(aug_label)
+
+            # if None is returned then the whole batch was background 
+            if aug_label is None:
+                continue
 
             # send back the batch 
             yield [np.asarray(aug_img), np.asarray(aug_label)]

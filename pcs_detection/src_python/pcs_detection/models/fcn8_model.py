@@ -167,8 +167,9 @@ class fcn8():
         return cross_entropy_mean
 
     def build_model(self, val = False, val_weights = None):
-        # welds and background
-        num_class = 4
+        # number of classes +1 for background
+        num_class = len(self.config.CLASS_NAMES) + 1
+        
         if self.config.CHANNEL == 'RGB' or self.config.CHANNEL == 'LAB' or self.config.CHANNEL == 'YCR_CB':
             num_channels = 3
         elif self.config.CHANNEL == 'THERMAL' or self.config.CHANNEL == 'GREY' or self.config.CHANNEL == 'STACKED':
