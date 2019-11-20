@@ -79,9 +79,9 @@ class dataLoader():
 
         # go through every directory
         for directory in data_dirs:
+                        
+            data_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/' , 2)[0] + '/scripts/' +  directory['dir_path']
             
-            data_path = directory['dir_path']
-            #data_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/' , 2)[0] + '/scripts/' +  directory['dir_path']
             if directory['labels']:
                 label_path = data_path.split("/")[0:-1]
                 label_path.append(label_name)

@@ -35,9 +35,9 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import time
-from src_python.pcs_detection.data_loader import dataLoader
-from src_python.pcs_detection.preprocess import preprocessing
-from src_python.pcs_detection.utils import histogram, minMaxNormalize, resize, dump_validation_config, dump_inference_config, colorTriLabel, colorPrediction, LABtoBGR, get_colors
+from pcs_detection.data_loader import dataLoader
+from pcs_detection.preprocess import preprocessing
+from pcs_detection.utils import histogram, minMaxNormalize, resize, dump_validation_config, dump_inference_config, colorTriLabel, colorPrediction, LABtoBGR, get_colors
 
 def train(config):
     '''
@@ -45,9 +45,9 @@ def train(config):
     '''
 
     if config.MODEL == 'fcn8':
-        from src_python.pcs_detection.models.fcn8_model import fcn8
+        from pcs_detection.models.fcn8_model import fcn8
     elif config.MODEL == 'fcn_reduced':
-        from src_python.pcs_detection.models.fcn8_reduced import fcn8
+        from pcs_detection.models.fcn8_reduced import fcn8
     else:
         print('invalid model')
 

@@ -40,7 +40,7 @@ if __name__ == '__main__':
     with open(dir_path + '/data/weights/<weight_path>/full_config.json') as json_data_file:
         data = json.load(json_data_file)
     config = Config(**data)
-
+ 
     if 'VAL_WEIGHT_PATH' in config.__dict__.keys():
         validate(config)
     else:
