@@ -28,7 +28,7 @@ from pcs_detection.preprocess import preprocessing
 
 class Inference():
     '''
-    Edits the config based on the validation weights and builds the model
+    Edits the config bas ded on the validation weights and builds the model
     '''
     def __init__(self, config):
                 
@@ -37,12 +37,13 @@ class Inference():
         # evaluate the full image regardless of what is in config 
         self.config.USE_FULL_IMAGE = True
 
-        # load in model settings from the config associated with the weights
-        print('___Config Options From Training___')
+        # display the type of model and image channels
+        print('___Config_Options_From_Training___')
         print('Using model:', config.MODEL)
         print('Using channel:',config.CHANNEL)
         print('___________________________________')
-        # build the model --- this only needs to be done once 
+
+        # load in the model
         if config.MODEL == 'fcn8':
             from pcs_detection.models.fcn8_model import fcn8
         elif config.MODEL == 'fcn_reduced':
@@ -61,6 +62,9 @@ class Inference():
         Applies preprocessing, makes a prediction, and converts it to a boolean mask 
         Returns np array of size img_height x img_width
         '''
+
+        img_data_original = img_data_original.astype(np.float32)
+
         if not img_data_original.any():
           print("Input image is invalid")
           return img_data_original
@@ -71,13 +75,14 @@ class Inference():
         # preprocess data and make prediction 
         # apply preprocessing 
         img_data = preprocessing(img_data, self.config)
+        # first dimension is used for batch size
         img_data = np.expand_dims(img_data, axis=0)
 
         # make a prediction and convert it to a boolean mask
         prediction = self.model.predict(img_data)
-        print(type(self.config.CONFIDENCE_THRESHOLD))
         prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
         prediction = (np.argmax(prediction,axis=-1)).astype(np.uint8)
         prediction = prediction[0]
 
         return prediction
+        

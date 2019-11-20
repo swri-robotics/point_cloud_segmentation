@@ -42,33 +42,37 @@ def get_labels_from_xml(label_path):
     
     # name of the outer directory this label corresponds to
     # allows for images in different directories to have the same filename 
-    dataset_name = label_path.split('/')[4]
+    dataset_name = label_path.split('/')[-2]
 
     for image_tag in root.iter('image'):
         image = {}
+        # initialize all types of labels
+        for label_name in root.iter('label'):
+            image[label_name.find('name').text] = list()
 
         #extract the meta info from the image
         for key, value in image_tag.items():
             image[key] = value
 
-        #make the name only be the image name with the .tiff ending
-
+        #keys will be collection folder combined with each images
+        #this allows for images in different folders to have the same name
         image['name'] = dataset_name + '/' + image['name']
 
         image['contour'] = list()
 
-        #tag = 'polyline'
-        tag = 'polyline'
+        # loop through the poly elements in the image
+        for poly_tag in image_tag:
+            # get the type of poly element - eg polyline, polygon
+            poly_elem = {}
+            poly_type = poly_tag.tag
+            poly_elem[poly_type] = []
 
-        for poly_tag in image_tag.iter(tag):     
-            #pull the values from the poly item
-            polyline = {'type': tag}
             for key, value in poly_tag.items():
-                polyline[key] = value
-
+                poly_elem[key] = value
+ 
             #Get the contour points
             contour_points = []
-            shape = str(polyline['points']).split(";") #get the shape from the polyline 
+            shape = str(poly_elem['points']).split(";") #get the shape from the polyline 
             for pair in shape:
                 x, y = pair.split(",")
                 contour_points.append([int(float(x)), int(float(y))])
@@ -77,15 +81,15 @@ def get_labels_from_xml(label_path):
             contour = np.array(pd.DataFrame(contour_points),
                                                         np.int32
                                                         )
-            image['contour'].append(contour)
+            image[poly_elem['label']].append([contour,poly_type])
             
         anno[image['name']] = image
     
     return anno
 
-def dump_config(config):
+def dump_validation_config(config):
     '''
-    Save the current config in the same folder in the model weights.
+    Save the config used to train in the same folder in the model weights.
     This config can later be used to apply the same preprocessing, and model selection
     that was used in training 
     '''
@@ -97,12 +101,29 @@ def dump_config(config):
                 config_dump[key] = config.__getattribute__(key)
             except:
                 pass
-    save_path = os.path.join(os.path.split(config.WEIGHT_SAVE_PATH)[0],'config.json')
+    save_path = os.path.join(os.path.split(config.WEIGHT_SAVE_PATH)[0],'full_config.json')
+    with open(save_path, 'w') as outfile:
+        json.dump(config_dump, outfile, indent=4) 
+
+def dump_inference_config(config):
+    '''
+    Save a config used for inference in the same folder as the weights.
+    '''
+    wanted_keys = ['MODEL', 'VAL_WEIGHT_PATH', 'BATCH_SIZE', 'MODE', 'DISPLAY_SCALE_FACTOR', 'CHANNEL', 'PRE_PROCESS', 'CONFIDENCE_THRESHOLD', 'CLASS_NAMES', 'ORIG_DIMS']
+    config_dump = {}
+    for  key in config.__dict__:
+        if key in wanted_keys:
+            try:
+                config_dump[key] = config.__getattribute__(key)
+            except:
+                pass
+    save_path = os.path.join(os.path.split(config.WEIGHT_SAVE_PATH)[0],'inference_config.json')
     print('_____CONFIG______')
     print(config_dump)
     print('_________________')
     with open(save_path, 'w') as outfile:
         json.dump(config_dump, outfile, indent=4) 
+
 
 def resize(image, scale_factor):
     '''
@@ -192,3 +213,40 @@ def histogram(original_image):
 
     # display histogram 
     cv2.imshow('RGBT Data Distribution', histImage)
+
+def colorTriLabel(label, colors):
+    display_label = np.zeros((label.shape[0], label.shape[1], 3))
+    display_label[:,:,0] = label[:,:,0] * 255
+    display_label[:,:,-1] = label[:,:,-1] * 255
+    for ii, color in enumerate(colors):
+        display_label[label[:,:,ii+1] == 1] = color
+    return display_label.astype(np.uint8)
+
+def colorPrediction(prediction, orig_img, colors):
+    '''
+    Creates a three channel bgr image and colors it with the prediciton.
+    '''
+    prediction_display = orig_img.copy()    
+    prediction = np.argmax(prediction, axis=-1)
+    for jj, color in enumerate(colors):
+        prediction_display[:,:][prediction==jj+1] = color
+    prediction_display = prediction_display.astype(np.uint8)
+    return prediction_display
+
+def LABtoBGR(image, config):
+    '''
+    Used to convert the LAB color space back to BGR
+    '''
+    image += config.PRE_PROCESS['lab']
+    image[image==0] = 1e-4
+    image = cv2.cvtColor(image.astype(np.float32), cv2.COLOR_LAB2BGR)
+    image *= 255
+    return image
+
+def get_colors(n):
+    '''
+    Generates a list of colors
+    '''
+    colors = [[102,255,153], [255, 102, 204], [102, 204, 255], [51, 102, 153]]
+    return colors[0:n]
+

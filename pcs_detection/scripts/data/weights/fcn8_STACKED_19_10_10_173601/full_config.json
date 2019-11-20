@@ -1,0 +1,89 @@
+{
+    "WEIGHT_SAVE_PATH": "/mnt/project_share/Weld_Detection/weld_weights/using_negatives_reduced/fcn8_STACKED_19_10_10_173601/{epoch:02d}.h5",
+    "VAL_WEIGHT_PATH": "<path_to>/fcn8_COMBINED_19_10_10_173426/08.h5",
+    "WEIGHT_ID": "using_negatives_reduced",
+    "BACKGROUND_REDUCTION": 30,
+    "AUGMENTATIONS": {
+        "number_aug": 100,
+        "horizontal_flip": true,
+        "brightness_range": null,
+        "rotation_range": 45,
+        "vertical_flip": true,
+        "zoom_range": 0.2
+    },
+    "TRAINING_DIRS": [
+        {
+            "dir_path": "data/example_dataset_1/training",
+            "num_imgs": "all",
+            "label": true
+        },
+        {
+            "dir_path": "data/example_dataset_2/training",
+            "num_imgs": "all",
+            "label": true
+        }
+    ],
+    "BATCH_SIZE": 8,
+    "DISPLAY_SCALE_FACTOR": 1.25,
+    "LEARNING_RATE": {
+        "reduce_patience": 1,
+        "reduce_factor": 0.6,
+        "start": 0.008,
+        "end": 0.0001
+    },
+    "MODEL": "fcn8",
+    "VALIDATION_DIRS": [
+        {
+            "dir_path": "data/example_dataset_1/validation",
+            "num_imgs": "all",
+            "label": true
+        },
+        {
+            "dir_path": "data/example_dataset_2/validation",
+            "num_imgs": "all",
+            "label": true
+        }
+    ],
+    "MIN_PIXELS_IN_IMG": 100,
+    "MODE": "VALIDATE",
+    "IMG_DIMS": [
+        256,
+        256
+    ],
+    "PRE_PROCESS": {
+        "edge": [
+            0,
+            3
+        ],
+        "grey": [
+            117
+        ],
+        "rgb": [
+            182.11864,
+            155.26283,
+            107.5
+        ],
+        "ycr": [
+            123,
+            126,
+            120
+        ],
+        "lab": [
+            50,
+            0.1,
+            1.5
+        ]
+    },
+    "CHANNEL": "STACKED",
+    "SAVE_MODEL": true,
+    "USE_FULL_IMAGE": false,
+    "N_EPOCHS": 100,
+    "LABEL_THICKNESS": 5,
+    "CLASS_NAMES": [
+        "weld"
+    ],
+    "ORIG_DIMS": [
+        480,
+        640
+    ]
+}

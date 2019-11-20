@@ -167,9 +167,10 @@ class fcn8():
         return cross_entropy_mean
 
     def build_model(self, val = False, val_weights = None):
-        # welds and background
-        num_class = 2
-        if self.config.CHANNEL == 'RGB':
+        # number of classes +1 for background
+        num_class = len(self.config.CLASS_NAMES) + 1
+        
+        if self.config.CHANNEL == 'RGB' or self.config.CHANNEL == 'LAB' or self.config.CHANNEL == 'YCR_CB':
             num_channels = 3
         elif self.config.CHANNEL == 'THERMAL' or self.config.CHANNEL == 'GREY' or self.config.CHANNEL == 'STACKED':
             num_channels = 1
@@ -408,10 +409,11 @@ class fcn8():
         model = Model(input_image, upscore8n)
         model_prob = Model(input_image, upscore_out)
 
-        # use sgd for optimizer (could try adam too)
-        sgd = optimizers.SGD(lr=self.config.LEARNING_RATE['start'], momentum=0.9)
+
 
         if not val:
+            # use sgd for optimizer (could try adam too)
+            sgd = optimizers.SGD(lr=self.config.LEARNING_RATE['start'], momentum=0.9)
             model.compile(
                             optimizer=sgd,
                             loss = self.sparse_loss,

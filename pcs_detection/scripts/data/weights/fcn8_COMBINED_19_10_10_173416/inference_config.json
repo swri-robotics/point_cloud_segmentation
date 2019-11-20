@@ -1,0 +1,40 @@
+{
+    "CONFIDENCE_THRESHOLD": 0.5,
+    "BATCH_SIZE": 8,
+    "MODEL": "fcn8",
+    "CHANNEL": "COMBINED",
+    "DISPLAY_SCALE_FACTOR": 1.25,
+    "VAL_WEIGHT_PATH": "<path_to>/fcn8_GREY_19_10_10_101037/23.h5",
+    "PRE_PROCESS": {
+        "edge": [
+            0,
+            3
+        ],
+        "grey": [
+            117
+        ],
+        "rgb": [
+            182.11864,
+            155.26283,
+            107.5
+        ],
+        "ycr": [
+            123,
+            126,
+            120
+        ],
+        "lab": [
+            50,
+            0.1,
+            1.5
+        ]
+    },
+    "ORIG_DIMS": [
+        480,
+        640
+    ],
+    "CLASS_NAMES": [
+        "weld"
+    ],
+    "MODE": "VALIDATE"
+}

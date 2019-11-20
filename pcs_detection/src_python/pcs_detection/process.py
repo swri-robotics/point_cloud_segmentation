@@ -26,10 +26,7 @@
 
 import cv2
 import keras
-from data_loader import dataLoader
-from inference import inference
 import sys
-from utils import histogram, minMaxNormalize, load_training_config, resize, dump_config
 import datetime
 import os
 from keras.callbacks import ModelCheckpoint, EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, History
@@ -38,7 +35,9 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import time
-from preprocess import preprocessing
+from pcs_detection.data_loader import dataLoader
+from pcs_detection.preprocess import preprocessing
+from pcs_detection.utils import histogram, minMaxNormalize, resize, dump_validation_config, dump_inference_config, colorTriLabel, colorPrediction, LABtoBGR, get_colors
 
 def train(config):
     '''
@@ -46,21 +45,20 @@ def train(config):
     '''
 
     if config.MODEL == 'fcn8':
-        from fcn8_model import fcn8
+        from pcs_detection.models.fcn8_model import fcn8
     elif config.MODEL == 'fcn_reduced':
-        from fcn8_reduced import fcn8
+        from pcs_detection.models.fcn8_reduced import fcn8
     else:
         print('invalid model')
 
     # saving path will also add a time stamp to avoid duplicates and save per epoch
-    save_path = config.WEIGHT_SAVE_PATH
+    dir_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/',2)[0] + '/scripts'
     utid = datetime.datetime.now().strftime('%y_%m_%d_%H%M%S')
-    model_info = config.MODEL + '_' + config.CHANNEL + '_'
-    config.WEIGHT_SAVE_PATH = '{0}{1}'.format(save_path,model_info) + '{0}/{1}'.format(utid, '{epoch:02d}.h5')
+    model_info = config.MODEL + '_' + config.CHANNEL
+    config.WEIGHT_SAVE_PATH = '{0}/{1}/{2}_{3}_{4}/{5}'.format(dir_path, config.WEIGHT_DIR, config.WEIGHT_ID, model_info, utid, '{epoch:02d}.h5')
 
     # reset umask so new permissions can be written 
     original_umask = os.umask(0)
-
     #make the model save dir if it does not already exist
     if not os.path.exists(config.WEIGHT_SAVE_PATH):
         print("Making dir: {}".format(config.WEIGHT_SAVE_PATH))
@@ -72,10 +70,6 @@ def train(config):
 
     # never train on the full image
     config.USE_FULL_IMAGE = False 
-
-    # write the config that will be used for training 
-    dump_config(config)
-    
     # create the model
     weldDetector = fcn8(config)
     weldDetector.build_model()
@@ -121,6 +115,16 @@ def train(config):
 
     print("Finished training.")
 
+    # generate a config for validation/inference using the best weights from training
+    weights_dir = config.WEIGHT_SAVE_PATH.rsplit('/',1)[0]
+    best_weights_file = '01.h5'
+    for file in sorted(os.listdir(weights_dir)):
+        if file.endswith('.h5'):
+            best_weights_file = file 
+    config.VAL_WEIGHT_PATH = os.path.join(weights_dir,best_weights_file)
+    config.MODE = 'VALIDATE'
+    dump_validation_config(config)
+    dump_inference_config(config)
     # Display and save training curves 
     fig = plt.figure()
     axis1 = fig.add_subplot(311)
@@ -152,6 +156,7 @@ def train(config):
     print('saving figure to' ,metrics_path)
     fig.savefig(metrics_path)
 
+    return
     #fig.show()
 
 def validate(config):
@@ -159,15 +164,10 @@ def validate(config):
     Used for looking at predictions of an already trained model.
     '''
    
-    # load in config from training
-    print('___Config Options From Training___')
-    load_training_config(config)
-    print('___________________________________')
-
     if config.MODEL == 'fcn8':
-        from fcn8_model import fcn8
+        from pcs_detection.models.fcn8_model import fcn8
     elif config.MODEL == 'fcn_reduced':
-        from fcn8_reduced import fcn8
+        from pcs_detection.models.fcn8_reduced import fcn8
 
     # always validate on full image
     config.USE_FULL_IMAGE = True
@@ -192,16 +192,24 @@ def validate(config):
         print('Prediction Time:', end-start)
 
         for ii in range(img_batch.shape[0]):
-            try:
-                prediction = (pred[ii, :, :, 1] - pred[ii, :, :, 0]) #subtract difference between background and foreground
-                prediction = prediction * np.argmax(pred[ii],axis=-1) #only get the area that is interresting
-                prediction = ((prediction - prediction.min()) / prediction[prediction != 0].ptp()) * 255 #scale up
-                prediction = prediction.astype(np.uint8) #convert to uint8
-            except:
-                prediction = prediction.astype(np.uint8) #convert to uint8
-                
+
             image = img_batch[ii]
             label = label_batch[ii]
+
+            # convert the image back to bgr if needed 
+            if config.CHANNEL == 'LAB':
+                image = LABtoBGR(image, config)
+
+            elif config.CHANNEL == 'YCR_CB':
+                image += np.asarray(config.PRE_PROCESS['ycr'])
+                image = cv2.cvtColor(image,cv2.COLOR_YCR_CB2BGR)
+
+            colors = get_colors(len(config.CLASS_NAMES))
+
+            image = minMaxNormalize(image)
+            if image.shape[-1] != 3:
+                image = cv2.merge((image, image, image))
+            colored_predicition = colorPrediction(pred[ii], image, colors)
 
             if config.CHANNEL == 'COMBINED':
                 edge = minMaxNormalize(image[:,:,-1:image.shape[2]]).astype(np.uint8)
@@ -209,24 +217,11 @@ def validate(config):
                 cv2.imshow('edge', edge)
 
             # normalize image to be between 0 and 255 
-            image = minMaxNormalize(image)
-
-            # overylay to view label on image
-            overlay = np.zeros((image.shape[0], image.shape[1], 3)).astype(np.uint8)
-            overlay[:,:,0] = image[:,:,0]
-            overlay[:,:,1] = image[:,:,0]
-            overlay[:,:,2] = image[:,:,0]
-            #overlay[label[:,:,1] == 1] = (0,0,255)
-
-            _, contours, _ = cv2.findContours(prediction,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
-            # draw red contours on the rgb image 
-            cv2.drawContours(overlay, contours, -1, (7,24,194), -1)
+            display_label = colorTriLabel(label, colors)
 
             cv2.imshow('img', resize(image, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('label', resize(label, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('pred overlay', resize(overlay, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('prediction', resize(prediction, config.DISPLAY_SCALE_FACTOR))
+            cv2.imshow('label', resize(display_label, config.DISPLAY_SCALE_FACTOR))
+            cv2.imshow('pred overlay', resize(colored_predicition, config.DISPLAY_SCALE_FACTOR))
             key = cv2.waitKey(0)
             # press q to quit the imshows 
             if 'q' == chr(key & 255):
@@ -245,53 +240,43 @@ def test_dataloader(config):
         img_batch, label_batch = next(gen)
 
         for ii in range(len(img_batch)):
+
             image = img_batch[ii,:,:,:]
             label = label_batch[ii,:,:,:]
 
             # want a mean within a std of zero
             histogram(image)
 
+            if config.CHANNEL == 'LAB':
+                image = LABtoBGR(image, config)
+
+            elif config.CHANNEL == 'YCR_CB':
+                image += np.asarray(config.PRE_PROCESS['ycr'])
+                image = cv2.cvtColor(image,cv2.COLOR_YCR_CB2BGR)
+
             if config.CHANNEL == 'COMBINED':
                 edge = minMaxNormalize(image[:,:,-1:image.shape[2]]).astype(np.uint8)
                 image = image[:,:,0:image.shape[-1]-1]
                 cv2.imshow('edge', edge)
 
+            colors = get_colors(len(config.CLASS_NAMES))
+            display_label = colorTriLabel(label, colors)
+
             # normalize image to be between 0 and 255 
             image = minMaxNormalize(image)
 
             # overylay to view label on image
-            overlay = np.zeros((image.shape[0], image.shape[1], 3)).astype(np.uint8)
-            overlay[:,:,0] = image[:,:,0]
-            overlay[:,:,1] = image[:,:,0]
-            overlay[:,:,2] = image[:,:,0]
-
-            overlay[label[:,:,1] == 1] = (0,0,255)
+            if image.shape[-1] != 3:
+                image = cv2.merge((image, image, image))
+            overlay = image.copy()
+            overlay_label = label.copy()
+            overlay = colorPrediction(overlay_label, overlay, colors)
 
             cv2.imshow('img', resize(image, config.DISPLAY_SCALE_FACTOR))
-            cv2.imshow('label', resize(label, config.DISPLAY_SCALE_FACTOR))
+            cv2.imshow('label', resize(display_label, config.DISPLAY_SCALE_FACTOR))
             cv2.imshow('overlay', resize(overlay, config.DISPLAY_SCALE_FACTOR))
             key = cv2.waitKey(0)
             # press q to quit the imshows 
             if 'q' == chr(key & 255):
                 sys.exit(0)
 
-def deploy(config):
-    '''
-    Demonstrates the deployable code on a single image 
-    '''
-    # create the inference object 
-    weld_inferer = inference(config)
-
-    # load in an image
-    test_img = cv2.imread('/mnt/project_share/Weld_Detection/aluminum_3/visible/positives/0011.png', cv2.IMREAD_UNCHANGED).astype(np.float32)
-
-    # apply preprocessing and make a prediction 
-    prediction = weld_inferer.make_prediction(test_img)    
-
-    # display the prediction and original image=
-    cv2.imshow('predicition', (prediction*255).astype(np.uint8)) # convert to 255 to show up as white
-    cv2.imshow('original image', test_img.astype(np.uint8))
-    key = cv2.waitKey(0)
-    # press q to quit the imshows 
-    if 'q' == chr(key & 255):
-        sys.exit(0)
