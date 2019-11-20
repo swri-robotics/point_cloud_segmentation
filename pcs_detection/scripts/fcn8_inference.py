@@ -32,6 +32,7 @@ import cv2 as cv
 # For importing the config
 import json
 import os
+import sys
 
 # Inference module
 from pcs_detection.inference import Inference
@@ -42,6 +43,11 @@ class Config:
         self.__dict__.update(entries)
 
 if __name__ == '__main__':
+  if sys.argv[1] == "NO_GPU":
+      os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+  elif len(sys.argv):
+      print("Invalid argument. Pass argument 'NO_GPU' to run in CPU mode")
+
   # Import Config json file and convert into format we need
   dir_path = os.path.dirname(os.path.realpath(__file__))
   
@@ -56,7 +62,7 @@ if __name__ == '__main__':
   input_image = cv.imread(dir_path + '/data/example_dataset_1/validation/0003.png')
 
   # Generate the annotation and convert to 3 channel image
-  res = annotator.make_prediction(input_image)
+  res = annotator.make_prediction(input_image[:,:,0])
   results_image = cv.merge((res, res, res)) * 255
 
   # Show the results
