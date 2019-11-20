@@ -109,7 +109,7 @@ def dump_inference_config(config):
     '''
     Save a config used for inference in the same folder as the weights.
     '''
-    wanted_keys = ['MODEL', 'VAL_WEIGHT_PATH', 'BATCH_SIZE', 'MODE', 'DISPLAY_SCALE_FACTOR', 'CHANNEL', 'PRE_PROCESS', 'CONFIDENCE_THRESHOLD', 'CLASS_NAMES']
+    wanted_keys = ['MODEL', 'VAL_WEIGHT_PATH', 'BATCH_SIZE', 'MODE', 'DISPLAY_SCALE_FACTOR', 'CHANNEL', 'PRE_PROCESS', 'CONFIDENCE_THRESHOLD', 'CLASS_NAMES', 'ORIG_DIMS']
     config_dump = {}
     for  key in config.__dict__:
         if key in wanted_keys:

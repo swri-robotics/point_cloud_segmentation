@@ -12,16 +12,27 @@
     "BACKGROUND_REDUCTION": 30,
     "WEIGHT_ID": "using_negatives",
     "PRE_PROCESS": {
-        "rgb": [
-            182.11864,
-            155.26283
-        ],
         "edge": [
             0,
             3
         ],
         "grey": [
             117
+        ],
+        "rgb": [
+            182.11864,
+            155.26283,
+            107.5
+        ],
+        "ycr": [
+            123,
+            126,
+            120
+        ],
+        "lab": [
+            50,
+            0.1,
+            1.5
         ]
     },
     "MIN_PIXELS_IN_IMG": 100,
@@ -70,6 +81,9 @@
         }
     ],
     "MODEL": "fcn8",
+    "CLASS_NAMES": [
+        "weld"
+    ],
     "DISPLAY_SCALE_FACTOR": 1.25,
     "BATCH_SIZE": 8,
     "SAVE_MODEL": true,
