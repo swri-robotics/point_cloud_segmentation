@@ -53,7 +53,6 @@ if __name__ == '__main__':
   annotator = Inference(config)
 
   # Load the image
-  print(dir_path + '/data/example/training/0011.png')
   input_image = cv.imread(dir_path + '/data/example_dataset_1/validation/0003.png')
 
   # Generate the annotation and convert to 3 channel image
