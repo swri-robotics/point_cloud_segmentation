@@ -33,6 +33,10 @@ def preprocessing(img_data, config):
     and mean subtraction on image 
     '''
 
+    # only use the first channel if grey is being used 
+    if config.CHANNEL == 'GREY' and len(img_data.shape) != 2:
+        img_data = img_data[:,:,0]
+
     # add third dimension to images with a single channel
     if len(img_data.shape) == 2:
         img_data = np.expand_dims(img_data, axis=-1)

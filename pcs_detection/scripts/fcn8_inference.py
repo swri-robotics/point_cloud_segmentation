@@ -45,7 +45,7 @@ if __name__ == '__main__':
   # Import Config json file and convert into format we need
   dir_path = os.path.dirname(os.path.realpath(__file__))
   
-  with open(dir_path + '/data/weights/<weight_file_dir_name>/inference_config.json') as json_data_file:
+  with open(dir_path + '/data/weights/using_negatives_fcn8_GREY_19_10_10_101037/inference_config.json') as json_data_file:
       data = json.load(json_data_file)
   config = Config(**data)
 
@@ -53,7 +53,8 @@ if __name__ == '__main__':
   annotator = Inference(config)
 
   # Load the image
-  input_image = cv.imread(dir_path + '/data/example/training/0011.png')
+  print(dir_path + '/data/example/training/0011.png')
+  input_image = cv.imread(dir_path + '/data/example_dataset_1/validation/0003.png')
 
   # Generate the annotation and convert to 3 channel image
   res = annotator.make_prediction(input_image)
