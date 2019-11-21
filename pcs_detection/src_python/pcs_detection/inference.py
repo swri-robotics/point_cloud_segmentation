@@ -26,12 +26,15 @@
 import numpy as np
 from pcs_detection.preprocess import preprocessing
 
+import tensorflow as tf
+import keras.backend as K
+
+
 class Inference():
     '''
     Edits the config bas ded on the validation weights and builds the model
     '''
-    def __init__(self, config):
-                
+    def __init__(self, config):                
         self.config=config 
 
         # evaluate the full image regardless of what is in config 
@@ -49,12 +52,21 @@ class Inference():
         elif config.MODEL == 'fcn_reduced':
             from pcs_detection.models.fcn8_reduced import fcn8
 
+        # Save the graph and session so it can be set if make_prediction is in another thread
+        self.graph = tf.get_default_graph()
+        self.session = K.get_session()
+
         # create the model
+        K.set_session(self.session)
         weldDetector = fcn8(self.config)
         # load weights into the model file
         weldDetector.build_model(val=True, val_weights = self.config.VAL_WEIGHT_PATH)
 
         self.model = weldDetector.model
+
+        self.model._make_predict_function()
+        self.graph.finalize()
+
         print("Model loaded and ready")
 
     def make_prediction(self, img_data_original):
@@ -62,7 +74,6 @@ class Inference():
         Applies preprocessing, makes a prediction, and converts it to a boolean mask 
         Returns np array of size img_height x img_width
         '''
-
         img_data_original = img_data_original.astype(np.float32)
 
         if not img_data_original.any():
@@ -79,7 +90,9 @@ class Inference():
         img_data = np.expand_dims(img_data, axis=0)
 
         # make a prediction and convert it to a boolean mask
-        prediction = self.model.predict(img_data)
+        with self.session.as_default():
+          with self.graph.as_default():
+            prediction = self.model.predict(img_data)
         prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
         prediction = (np.argmax(prediction,axis=-1)).astype(np.uint8)
         prediction = prediction[0]
