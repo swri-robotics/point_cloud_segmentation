@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <launch>
   <arg name="cloud_path" default="$(find pcs_ros)/test/data/colorized_cloud1.bag"/>
   <arg name="use_pcd" default="false" />
