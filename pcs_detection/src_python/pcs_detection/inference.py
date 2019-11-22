@@ -54,7 +54,15 @@ class Inference():
 
         # Save the graph and session so it can be set if make_prediction is in another thread
         self.graph = tf.get_default_graph()
-        self.session = K.get_session()
+        cfg = tf.ConfigProto()
+        # This allows GPU memory to dynamically grow. This is a workaround to fix this issue on RTX cards
+        # https://github.com/tensorflow/tensorflow/issues/24496
+        # However, this can be problematic when sharing memory between applications.
+        # TODO: Check and see if issue 24496 has been closed, and change this. Note that since Tensorflow 1.15
+        # is the final 1.x release, this might never happen until this code is upgraded to tensorflow 2.x
+        cfg.gpu_options.allow_growth = True
+        cfg.log_device_placement = False
+        self.session = tf.Session(config = cfg)
 
         # create the model
         K.set_session(self.session)
