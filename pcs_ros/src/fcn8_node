@@ -52,10 +52,12 @@ class InferenceServer(object):
     """
     service = None
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, invert_results = False):
         """
         Constructor takes an input filepath to the .h5 wieghts file
         """
+        self.invert_results = invert_results
+
         # Import Config json file and convert into format we need
         rospy.loginfo(filepath)
         rospy.loginfo("------------------------------")
@@ -91,6 +93,10 @@ class InferenceServer(object):
 
         results_image = cv.merge((res, res, res)) * 255
 
+        # Invert the image
+        if self.invert_results:
+          results_image = 255 - results_image
+
         # Convert results back into sensor_msgs/Image
         res_msg = self.bridge.cv2_to_imgmsg(results_image, "8UC3")
         response = ImageProcessingResponse(res_msg)
@@ -109,9 +115,10 @@ if __name__ == '__main__':
 
     # Filepath to the h5 weights file
     filepath = rospy.get_param('~filepath')
+    invert_results = rospy.get_param('~invert_results', False)
 
     # Launch server
-    server = InferenceServer(filepath)
+    server = InferenceServer(filepath, invert_results)
 
     rospy.loginfo("FCN8 Server is active")
     rospy.spin()
