@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "octomap_mesh_mask_node");
   ros::NodeHandle nh;
-  pcs_ros::OctomapMeshMaskAction("octomap_mesh_mask_server");
+  pcs_ros::OctomapMeshMaskAction omma("octomap_mesh_mask_server");
 
   ROS_INFO("Octomap Mesh Mask Action is available");
   ros::spin();
