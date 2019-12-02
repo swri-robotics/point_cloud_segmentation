@@ -113,6 +113,7 @@ target_link_libraries(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node ${catkin_L
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
  install(FILES
+   launch/extract_images_from_bag.launch
    launch/demo.launch
    config/demo.rviz
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="filepath" doc="input bag file" />
+  <arg name="results_dir"  />
+  <arg name="image_topic" default="extracted_image" />
+
+  <node pkg="rosbag" type="play" name="rosbag" required="true" args="$(arg filepath)"/>
+
+  <node pkg="image_view" type="image_saver" name="image_saver" output="screen" >
+    <param name="filename_format" value="$(arg results_dir)/%04i.png" />
+    <param name="encoding" value="8UC3" />
+    <param name="save_all_image" value="true" />
+    <remap from="image" to="$(arg image_topic)" />
+  </node>
+</launch>
