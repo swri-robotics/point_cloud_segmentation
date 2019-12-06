@@ -1,6 +1,7 @@
 ### Goal
-# Filepath of the input mesh
+# Filepath of the input mesh and associated frame
 string mesh_path
+string mesh_frame
 
 # Point Cloud Topic
 string point_cloud_topic
