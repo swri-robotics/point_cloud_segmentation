@@ -24,7 +24,7 @@
  '''
 
 import numpy as np
-from src_python.pcs_detection.preprocess import preprocessing
+from pcs_detection.preprocess import preprocessing
 
 class Inference():
     '''
@@ -45,9 +45,9 @@ class Inference():
 
         # load in the model
         if config.MODEL == 'fcn8':
-            from src_python.pcs_detection.models.fcn8_model import fcn8
+            from pcs_detection.models.fcn8_model import fcn8
         elif config.MODEL == 'fcn_reduced':
-            from src_python.pcs_detection.models.fcn8_reduced import fcn8
+            from pcs_detection.models.fcn8_reduced import fcn8
 
         # create the model
         weldDetector = fcn8(self.config)
