@@ -24,14 +24,14 @@
  '''
 
 import numpy as np
-from pcs_detection.preprocess import preprocessing
+from src_python.pcs_detection.preprocess import preprocessing
 
 class Inference():
     '''
     Edits the config bas ded on the validation weights and builds the model
     '''
     def __init__(self, config):
-                
+
         self.config=config 
 
         # evaluate the full image regardless of what is in config 
@@ -45,9 +45,9 @@ class Inference():
 
         # load in the model
         if config.MODEL == 'fcn8':
-            from pcs_detection.models.fcn8_model import fcn8
+            from src_python.pcs_detection.models.fcn8_model import fcn8
         elif config.MODEL == 'fcn_reduced':
-            from pcs_detection.models.fcn8_reduced import fcn8
+            from src_python.pcs_detection.models.fcn8_reduced import fcn8
 
         # create the model
         weldDetector = fcn8(self.config)
@@ -79,10 +79,25 @@ class Inference():
         img_data = np.expand_dims(img_data, axis=0)
 
         # make a prediction and convert it to a boolean mask
-        prediction = self.model.predict(img_data)
-        prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
-        prediction = (np.argmax(prediction,axis=-1)).astype(np.uint8)
-        prediction = prediction[0]
+        prediction =  self.model.predict(img_data)
+        prediction =  prediction[0]
 
-        return prediction
-        
+        # chnage the confidence of background predicition
+        prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
+
+        # practical min max normalization 
+        # values will depend on application 
+        prediction += 40
+        prediction /= 80
+
+        # get the max value of the prediction
+        val_prediction = np.max(prediction,axis=-1)
+
+        # probability is based off of the difference between the max class and background
+        val_prediction -= prediction[:,:,0]
+
+        # clip any abnormally strong predicitons 
+        val_prediction[val_prediction > 1] = 1
+        val_prediction[val_prediction < 0] = 0
+
+        return val_prediction
