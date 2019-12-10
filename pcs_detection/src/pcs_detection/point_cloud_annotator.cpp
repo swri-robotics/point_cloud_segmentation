@@ -51,6 +51,9 @@ bool PointCloudAnnotator::annotateImages()
   catch (...)
   {
     CONSOLE_BRIDGE_logError("Image Annotator Callback Exception");
+    buffer_mutex_.lock();
+    input_buffer_.pop();
+    buffer_mutex_.unlock();
     return false;
   }
 

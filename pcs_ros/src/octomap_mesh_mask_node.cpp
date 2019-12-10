@@ -1,8 +1,10 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
 #include <pcs_msgs/ApplyOctomapMeshMaskAction.h>
 #include <pcs_scan_integration/octomap_mesh_masking.h>
+#include <tf/transform_listener.h>
 
 namespace pcs_ros
 {
@@ -21,6 +23,7 @@ protected:
   std::string action_name_;
   pcs_msgs::ApplyOctomapMeshMaskFeedback feedback_;
   pcs_msgs::ApplyOctomapMeshMaskResult result_;
+  tf::TransformListener tf_listener_;
 
 public:
   OctomapMeshMaskAction(std::string name)
@@ -41,8 +44,26 @@ public:
     try
     {
       // Get pointcloud on topic provided
-      auto pointcloud =
-          ros::topic::waitForMessage<pcl::PointCloud<pcl::PointXYZRGB>>(goal->point_cloud_topic, ros::Duration(5.0));
+      auto pointcloud_msg =
+          ros::topic::waitForMessage<sensor_msgs::PointCloud2>(goal->point_cloud_topic, ros::Duration(5.0));
+
+      // Look up transform between octomap frame and mesh frame. Note that we look it up at time now because the octomap
+      // message could be pretty old
+      tf::StampedTransform transform;
+      tf_listener_.lookupTransform(goal->mesh_frame, pointcloud_msg->header.frame_id, ros::Time::now(), transform);
+
+      // Transform into mesh frame
+      sensor_msgs::PointCloud2 pc_mesh_frame;
+      pcl_ros::transformPointCloud(goal->mesh_frame, transform, *pointcloud_msg, pc_mesh_frame);
+
+      // Convert to PCL
+      pcl::PCLPointCloud2 pc_mesh_frame_pcl;
+      pcl_conversions::toPCL(pc_mesh_frame, pc_mesh_frame_pcl);
+
+      // Convert to Point<type>
+      pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+      pcl::fromPCLPointCloud2(pc_mesh_frame_pcl, *pointcloud);
+
       // Set the octree based on the parameters given
       masker.setOctree(pointcloud, goal->resolution, goal->lower_limit, goal->upper_limit, goal->limit_negative);
     }
@@ -98,7 +119,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "octomap_mesh_mask_node");
   ros::NodeHandle nh;
-  pcs_ros::OctomapMeshMaskAction("octomap_mesh_mask_server");
+  pcs_ros::OctomapMeshMaskAction omma("octomap_mesh_mask_server");
 
   ROS_INFO("Octomap Mesh Mask Action is available");
   ros::spin();

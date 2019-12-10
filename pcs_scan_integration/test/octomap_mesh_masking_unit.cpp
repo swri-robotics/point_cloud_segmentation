@@ -99,15 +99,15 @@ TEST_F(OctomapMeshMaskUnit, colorPassthrough)
         // Apply color filter
         auto result_cloud = pcs_scan_integration::colorPassthrough(cloud, lower_lim, upper_lim, limit_neg);
         // Check that the color filter is obeyed
-        EXPECT_EQ(result_cloud->size(), upper_lim - lower_lim - (upper_lim == lower_lim ? 0 : 1));
+        EXPECT_EQ(result_cloud->size(), upper_lim - lower_lim + 1);
         for (const pcl::PointXYZRGB& point : result_cloud->points)
         {
-          EXPECT_LT(point.r, upper_lim);
-          EXPECT_LT(point.g, upper_lim);
-          EXPECT_LT(point.b, upper_lim);
-          EXPECT_GT(point.r, lower_lim);
-          EXPECT_GT(point.g, lower_lim);
-          EXPECT_GT(point.b, lower_lim);
+          EXPECT_LE(point.r, upper_lim);
+          EXPECT_LE(point.g, upper_lim);
+          EXPECT_LE(point.b, upper_lim);
+          EXPECT_GE(point.r, lower_lim);
+          EXPECT_GE(point.g, lower_lim);
+          EXPECT_GE(point.b, lower_lim);
         }
       }
     }
@@ -122,7 +122,7 @@ TEST_F(OctomapMeshMaskUnit, colorPassthrough)
         // Apply color filter
         auto result_cloud = pcs_scan_integration::colorPassthrough(cloud, lower_lim, upper_lim, limit_neg);
         // Check that the color filter is obeyed
-        EXPECT_EQ(result_cloud->size(), cloud->size() - (upper_lim - lower_lim) - 1);
+        EXPECT_EQ(result_cloud->size(), cloud->size() - (upper_lim - lower_lim) + (upper_lim == lower_lim ? 0 : 1));
         for (const pcl::PointXYZRGB& point : result_cloud->points)
         {
           EXPECT_FALSE(((point.r > lower_lim) && (point.r < upper_lim)));
