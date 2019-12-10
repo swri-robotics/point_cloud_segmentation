@@ -34,12 +34,7 @@ class Inference():
     '''
     Edits the config bas ded on the validation weights and builds the model
     '''
-<<<<<<< HEAD
-    def __init__(self, config):
-
-=======
     def __init__(self, config):                
->>>>>>> 7182f4b... Fix issues when running inference from different thread as construction
         self.config=config 
 
         # evaluate the full image regardless of what is in config 
@@ -103,19 +98,13 @@ class Inference():
         img_data = np.expand_dims(img_data, axis=0)
 
         # make a prediction and convert it to a boolean mask
-<<<<<<< HEAD
-        prediction =  self.model.predict(img_data)
-        prediction =  prediction[0]
-
-        # chnage the confidence of background predicition
-=======
         with self.session.as_default():
           with self.graph.as_default():
             prediction = self.model.predict(img_data)
->>>>>>> 7182f4b... Fix issues when running inference from different thread as construction
+            # only use first image in the batch
+            prediction = prediction[0]
         prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
 
-<<<<<<< HEAD
         # practical min max normalization 
         # values will depend on application 
         prediction += 40
@@ -132,7 +121,3 @@ class Inference():
         val_prediction[val_prediction < 0] = 0
 
         return val_prediction
-=======
-        return prediction
-        
->>>>>>> 7182f4b... Fix issues when running inference from different thread as construction
