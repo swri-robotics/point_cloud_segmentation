@@ -43,7 +43,8 @@ class Config:
         self.__dict__.update(entries)
 
 if __name__ == '__main__':
-  if sys.argv[1] == "NO_GPU":
+  if len(sys.argv) > 1 and sys.argv[1] == "NO_GPU":
+      print("Disabling GPU")
       os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
   elif len(sys.argv):
       print("Invalid argument. Pass argument 'NO_GPU' to run in CPU mode")

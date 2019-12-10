@@ -72,8 +72,9 @@ pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::
   {
     if (!limit_negative)
     {
-      if (((point.r > lower_limit) && (point.r < upper_limit)) &&
-          ((point.g > lower_limit) && (point.g < upper_limit)) && ((point.b > lower_limit) && (point.b < upper_limit)))
+      if (((point.r >= lower_limit) && (point.r <= upper_limit)) &&
+          ((point.g >= lower_limit) && (point.g <= upper_limit)) &&
+          ((point.b >= lower_limit) && (point.b <= upper_limit)))
       {
         cloud_filtered->points[i] = point;
         i++;
@@ -81,8 +82,9 @@ pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::
     }
     else
     {
-      if (((point.r < lower_limit) || (point.r > upper_limit)) &&
-          ((point.g < lower_limit) || (point.g > upper_limit)) && ((point.b < lower_limit) || (point.b > upper_limit)))
+      if (((point.r <= lower_limit) || (point.r >= upper_limit)) &&
+          ((point.g <= lower_limit) || (point.g >= upper_limit)) &&
+          ((point.b <= lower_limit) || (point.b >= upper_limit)))
       {
         cloud_filtered->points[i] = point;
         i++;
@@ -137,7 +139,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
   checker.addCollisionObject("mesh_link", 0, obj2_shapes, obj2_poses);
 
   // Set the active collision objects and transforms
-  checker.setActiveCollisionObjects({ "octomap_link", "plane_link" });
+  checker.setActiveCollisionObjects({ "octomap_link", "mesh_link" });
   checker.setContactDistanceThreshold(0.0);
 
   tesseract_common::TransformMap location;

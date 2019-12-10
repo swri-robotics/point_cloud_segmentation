@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <launch>
   <arg name="cloud_path" default="$(find pcs_ros)/test/data/colorized_cloud1.bag"/>
   <arg name="use_pcd" default="false" />
@@ -17,10 +18,11 @@
     <node pkg="rosbag" type="play" name="rosbag_player" args="--clock --loop $(arg cloud_path)"/>
   </group>
 
-  <node pkg="pcs_ros" type="pc_masker_node" name="pc_masker_node" output="screen" >
+<!-- TODO: Convert this to use point_cloud_annotator_node -->
+<!--  <node pkg="pcs_ros" type="pc_masker_node" name="pc_masker_node" output="screen" >
     <param name="debug_viewer" value="false" />
     <param name="debug_publisher" value="false" />
-  </node>
+  </node>-->
 
   <!-- Launch detector -->
   <node unless="$(arg hist_backproject)" pkg="pcs_ros" type="pcs_ros_hsv_thresholding_node" name="hsv_threshold_node" output="screen" />
