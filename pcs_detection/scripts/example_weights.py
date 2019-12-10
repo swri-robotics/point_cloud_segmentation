@@ -27,7 +27,7 @@
 
 import json
 import os        
-from pcs_detection.process import validate
+from src_python.pcs_detection.process import validate
 
 
 class Config:
