@@ -39,34 +39,16 @@ public:
    */
   void execute_callback(const pcs_msgs::ApplyOctomapMeshMaskGoalConstPtr& goal)
   {
+    ROS_DEBUG("Executing OctomapMeshMask Action");
     pcs_scan_integration::OctomapMeshMask masker;
 
+    sensor_msgs::PointCloud2::ConstPtr pointcloud_msg;
     try
     {
       // Get pointcloud on topic provided
-      auto pointcloud_msg =
+      pointcloud_msg =
           ros::topic::waitForMessage<sensor_msgs::PointCloud2>(goal->point_cloud_topic, ros::Duration(5.0));
-
-      // Look up transform between octomap frame and mesh frame. Note that we look it up at time now because the octomap
-      // message could be pretty old
-      tf::StampedTransform transform;
-      tf_listener_.lookupTransform(goal->mesh_frame, pointcloud_msg->header.frame_id, ros::Time::now(), transform);
-
-      // Transform into mesh frame
-      sensor_msgs::PointCloud2 pc_mesh_frame;
-      pcl_ros::transformPointCloud(goal->mesh_frame, transform, *pointcloud_msg, pc_mesh_frame);
-
-      // Convert to PCL
-      pcl::PCLPointCloud2 pc_mesh_frame_pcl;
-      pcl_conversions::toPCL(pc_mesh_frame, pc_mesh_frame_pcl);
-
-      // Convert to Point<type>
-      pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-      pcl::fromPCLPointCloud2(pc_mesh_frame_pcl, *pointcloud);
-
-      // Set the octree based on the parameters given
-      masker.setOctree(pointcloud, goal->resolution, goal->lower_limit, goal->upper_limit, goal->limit_negative);
-    }
+     }
     catch (...)
     {
       ROS_ERROR("Octomap Mesh Mask Action did not receive a pointcloud on %s", goal->point_cloud_topic.c_str());
@@ -74,6 +56,34 @@ public:
       as_.setAborted(result_);
       return;
     }
+    tf::StampedTransform transform;
+    try {
+      // Look up transform between octomap frame and mesh frame. Note that we look it up at time now because the octomap
+      // message could be pretty old  
+      ROS_WARN_STREAM("Looking up " << goal->mesh_frame << " to " <<  pointcloud_msg->header.frame_id);
+      tf_listener_.lookupTransform(goal->mesh_frame, pointcloud_msg->header.frame_id, ros::Time::now() - ros::Duration(1), transform);
+    }
+    catch (tf::TransformException ex){
+      ROS_ERROR("%s",ex.what());
+      result_.status_msg = ex.what();
+      as_.setAborted(result_);
+      return;
+    }
+
+    // Transform into mesh frame
+    sensor_msgs::PointCloud2 pc_mesh_frame;
+    pcl_ros::transformPointCloud(goal->mesh_frame, transform, *pointcloud_msg, pc_mesh_frame);
+
+    // Convert to PCL
+    pcl::PCLPointCloud2 pc_mesh_frame_pcl;
+    pcl_conversions::toPCL(pc_mesh_frame, pc_mesh_frame_pcl);
+
+    // Convert to Point<type>
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::fromPCLPointCloud2(pc_mesh_frame_pcl, *pointcloud);
+
+    // Set the octree based on the parameters given
+    masker.setOctree(pointcloud, goal->resolution, goal->lower_limit, goal->upper_limit, goal->limit_negative);
 
     // Set the input mesh
     std::string input_filepath = goal->mesh_path;
