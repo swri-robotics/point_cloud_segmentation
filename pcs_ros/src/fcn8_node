@@ -95,6 +95,7 @@ class InferenceServer(object):
           res = self.annotator.make_prediction(input_image[:,:,:])
 
         results_image = cv.merge((res, res, res)) * 255
+        results_image = results_image.astype(np.uint8)
 
         # Invert the image
         if self.invert_results:

@@ -34,7 +34,8 @@ class Inference():
     '''
     Edits the config bas ded on the validation weights and builds the model
     '''
-    def __init__(self, config):                
+    def __init__(self, config):
+
         self.config=config 
 
         # evaluate the full image regardless of what is in config 
@@ -101,9 +102,24 @@ class Inference():
         with self.session.as_default():
           with self.graph.as_default():
             prediction = self.model.predict(img_data)
-        prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
-        prediction = (np.argmax(prediction,axis=-1)).astype(np.uint8)
-        prediction = prediction[0]
-
-        return prediction
         
+        prediction = prediction[0]
+        prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
+
+        # practical min max normalization 
+        # values will depend on application 
+        max_range = 5
+        prediction += max_range / 2
+        prediction /= max_range
+
+        # get the max value of the prediction
+        val_prediction = np.max(prediction,axis=-1)
+
+        # probability is based off of the difference between the max class and background
+        val_prediction -= np.max(prediction[:,:,[0,-1]], axis=-1)
+
+        # clip any abnormally strong predicitons 
+        val_prediction[val_prediction > 1] = 1
+        val_prediction[val_prediction < 0] = 0
+
+        return val_prediction
