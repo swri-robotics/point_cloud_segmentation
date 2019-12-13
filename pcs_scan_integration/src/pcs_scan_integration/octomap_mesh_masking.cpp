@@ -209,7 +209,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
 
     // TODO: Rethink the handling of color here. It should probably go in the Mesh object itself and pass through the
     // colors from the input (if given)
-    mesh_vertices_color_.assign(masked_mesh_->getVertices()->size(), Eigen::Vector3i(0, 128, 0));
+    mesh_vertices_color_.clear();
     return true;
   }
   else if (mask_type == MaskType::RETURN_OUTSIDE)
@@ -263,7 +263,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
     masked_mesh_ = std::make_shared<tesseract_geometry::Mesh>(vertices_ptr, triangles_ptr);
     // TODO: Rethink the handling of color here. It should probably go in the Mesh object itself and pass through the
     // colors from the input (if given)
-    mesh_vertices_color_.assign(masked_mesh_->getVertices()->size(), Eigen::Vector3i(0, 128, 0));
+    mesh_vertices_color_.clear();
     return true;
   }
 
@@ -272,9 +272,20 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
 
 bool OctomapMeshMask::saveMaskedMesh(std::string& filepath)
 {
-  return tesseract_collision::writeSimplePlyFile(filepath,
-                                                 *(masked_mesh_->getVertices()),
-                                                 mesh_vertices_color_,
-                                                 *(masked_mesh_->getTriangles()),
-                                                 masked_mesh_->getTriangleCount());
+  if (!mesh_vertices_color_.empty())
+  {
+    return tesseract_collision::writeSimplePlyFile(filepath,
+                                                   *(masked_mesh_->getVertices()),
+                                                   mesh_vertices_color_,
+                                                   *(masked_mesh_->getTriangles()),
+                                                   masked_mesh_->getTriangleCount());
+  }
+  else
+  {
+    return tesseract_collision::writeSimplePlyFile(filepath,
+                                                   *(masked_mesh_->getVertices()),
+                                                   *(masked_mesh_->getTriangles()),
+                                                   masked_mesh_->getTriangleCount());
+  }
+
 }
