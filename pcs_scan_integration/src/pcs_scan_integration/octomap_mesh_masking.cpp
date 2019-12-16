@@ -11,50 +11,14 @@ TESSERACT_COMMON_IGNORE_WARNINGS_POP
 
 using namespace pcs_scan_integration;
 
-// This was commented 10/23/2019. It seems that r,g, and b values are not independent fields, so you can't use this
-// approach. However we should look into that more later. If no one has fixed this in say a year, just delete it.
-// pcl::PointCloud<pcl::PointXYZRGB>::Ptr
-// pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud,
-//                                       const int& lower_limit,
-//                                       const int& upper_limit,
-//                                       const bool& limit_negative)
-//{
-//  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_r(new pcl::PointCloud<pcl::PointXYZRGB>());
-//  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_g(new pcl::PointCloud<pcl::PointXYZRGB>());
-//  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_b(new pcl::PointCloud<pcl::PointXYZRGB>());
-//  {
-//    pcl::PassThrough<pcl::PointXYZRGB> pass;
-//    pass.setInputCloud(input_cloud);
-//    pass.setFilterFieldName("r");
-//    pass.setFilterLimits(static_cast<float>(lower_limit), static_cast<float>(upper_limit));
-//    pass.setFilterLimitsNegative(limit_negative);
-//    pass.filter(*cloud_filtered_r);
-//  }
-//  {
-//    pcl::PassThrough<pcl::PointXYZRGB> pass;
-//    pass.setInputCloud(cloud_filtered_r);
-//    pass.setFilterFieldName("g");
-//    pass.setFilterLimits(static_cast<float>(lower_limit), static_cast<float>(upper_limit));
-//    pass.setFilterLimitsNegative(limit_negative);
-//    pass.filter(*cloud_filtered_g);
-//  }
-//  {
-//    pcl::PassThrough<pcl::PointXYZRGB> pass;
-//    pass.setInputCloud(cloud_filtered_g);
-//    pass.setFilterFieldName("b");
-//    pass.setFilterLimits(static_cast<float>(lower_limit), static_cast<float>(upper_limit));
-//    pass.setFilterLimitsNegative(limit_negative);
-//    pass.filter(*cloud_filtered_b);
-//  }
-//  return cloud_filtered_b;
-//}
-
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr
 pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr input_cloud,
                                        const int& lower_limit,
                                        const int& upper_limit,
                                        const bool& limit_negative)
 {
+  const bool structured_cloud = input_cloud->height > 1;
+
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>());
   cloud_filtered->header = input_cloud->header;
   cloud_filtered->width = input_cloud->width;
@@ -67,7 +31,7 @@ pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::
     CONSOLE_BRIDGE_logError("colorPassthrough: Lower limit greater than upper limit");
     assert(false);
   }
-  int i = 0;
+  std::size_t i = 0;
   for (const pcl::PointXYZRGB& point : input_cloud->points)
   {
     if (!limit_negative)
@@ -79,6 +43,18 @@ pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::
         cloud_filtered->points[i] = point;
         i++;
       }
+      else
+      {
+        // Set to 0 if structured point cloud. Otherwise eliminate it entirely
+        if (structured_cloud)
+        {
+          cloud_filtered->points[i] = point;
+          cloud_filtered->points[i]._PointXYZRGB::x = NAN;
+          cloud_filtered->points[i]._PointXYZRGB::y = NAN;
+          cloud_filtered->points[i]._PointXYZRGB::z = NAN;
+          i++;
+        }
+      }
     }
     else
     {
@@ -88,6 +64,18 @@ pcs_scan_integration::colorPassthrough(const pcl::PointCloud<pcl::PointXYZRGB>::
       {
         cloud_filtered->points[i] = point;
         i++;
+      }
+      else
+      {
+        // Set to 0 if structured point cloud. Otherwise eliminate it entirely
+        if (structured_cloud)
+        {
+          cloud_filtered->points[i] = point;
+          cloud_filtered->points[i]._PointXYZRGB::x = NAN;
+          cloud_filtered->points[i]._PointXYZRGB::y = NAN;
+          cloud_filtered->points[i]._PointXYZRGB::z = NAN;
+          i++;
+        }
       }
     }
   }
@@ -221,7 +209,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
 
     // TODO: Rethink the handling of color here. It should probably go in the Mesh object itself and pass through the
     // colors from the input (if given)
-    mesh_vertices_color_.assign(masked_mesh_->getVertices()->size(), Eigen::Vector3i(0, 128, 0));
+    mesh_vertices_color_.clear();
     return true;
   }
   else if (mask_type == MaskType::RETURN_OUTSIDE)
@@ -275,7 +263,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
     masked_mesh_ = std::make_shared<tesseract_geometry::Mesh>(vertices_ptr, triangles_ptr);
     // TODO: Rethink the handling of color here. It should probably go in the Mesh object itself and pass through the
     // colors from the input (if given)
-    mesh_vertices_color_.assign(masked_mesh_->getVertices()->size(), Eigen::Vector3i(0, 128, 0));
+    mesh_vertices_color_.clear();
     return true;
   }
 
@@ -284,9 +272,17 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
 
 bool OctomapMeshMask::saveMaskedMesh(std::string& filepath)
 {
-  return tesseract_collision::writeSimplePlyFile(filepath,
-                                                 *(masked_mesh_->getVertices()),
-                                                 mesh_vertices_color_,
-                                                 *(masked_mesh_->getTriangles()),
-                                                 masked_mesh_->getTriangleCount());
+  if (!mesh_vertices_color_.empty())
+  {
+    return tesseract_collision::writeSimplePlyFile(filepath,
+                                                   *(masked_mesh_->getVertices()),
+                                                   mesh_vertices_color_,
+                                                   *(masked_mesh_->getTriangles()),
+                                                   masked_mesh_->getTriangleCount());
+  }
+  else
+  {
+    return tesseract_collision::writeSimplePlyFile(
+        filepath, *(masked_mesh_->getVertices()), *(masked_mesh_->getTriangles()), masked_mesh_->getTriangleCount());
+  }
 }

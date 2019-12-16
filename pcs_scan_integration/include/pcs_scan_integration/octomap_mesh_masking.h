@@ -40,7 +40,10 @@ namespace pcs_scan_integration
  * @brief colorPassthrough Filter for PCL Pointcloud that filters based on color. Similar to Passthrough filter
  *
  * This currently applies one filter to all 3 channels and all 3 channels must satisfy it to be included. ie if r and g
- * are inside the threshold but b is outside, then the point is considered outside
+ * are inside the threshold but b is outside, then the point is considered outside.
+ *
+ * If the input cloud is an unordered point cloud (ie height == 1) then the points that don't satisfy the filter
+ * criteria are removed. If it is ordered (ie height != 1), they are set to xyz NAN
  * @param input_cloud ConstPtr to input cloud
  * @param lower_limit All RGB values must be > limit to be included in output
  * @param upper_limit All RGB values must be < limit to be included in output
