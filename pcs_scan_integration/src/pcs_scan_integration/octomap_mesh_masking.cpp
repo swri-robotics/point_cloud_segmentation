@@ -282,10 +282,7 @@ bool OctomapMeshMask::saveMaskedMesh(std::string& filepath)
   }
   else
   {
-    return tesseract_collision::writeSimplePlyFile(filepath,
-                                                   *(masked_mesh_->getVertices()),
-                                                   *(masked_mesh_->getTriangles()),
-                                                   masked_mesh_->getTriangleCount());
+    return tesseract_collision::writeSimplePlyFile(
+        filepath, *(masked_mesh_->getVertices()), *(masked_mesh_->getTriangles()), masked_mesh_->getTriangleCount());
   }
-
 }

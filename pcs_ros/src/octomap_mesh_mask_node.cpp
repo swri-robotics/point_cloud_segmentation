@@ -48,7 +48,7 @@ public:
       // Get pointcloud on topic provided
       pointcloud_msg =
           ros::topic::waitForMessage<sensor_msgs::PointCloud2>(goal->point_cloud_topic, ros::Duration(5.0));
-     }
+    }
     catch (...)
     {
       ROS_ERROR("Octomap Mesh Mask Action did not receive a pointcloud on %s", goal->point_cloud_topic.c_str());
@@ -57,14 +57,17 @@ public:
       return;
     }
     tf::StampedTransform transform;
-    try {
+    try
+    {
       // Look up transform between octomap frame and mesh frame. Note that we look it up at time now because the octomap
-      // message could be pretty old  
-      ROS_WARN_STREAM("Looking up " << goal->mesh_frame << " to " <<  pointcloud_msg->header.frame_id);
-      tf_listener_.lookupTransform(goal->mesh_frame, pointcloud_msg->header.frame_id, ros::Time::now() - ros::Duration(1), transform);
+      // message could be pretty old
+      ROS_WARN_STREAM("Looking up " << goal->mesh_frame << " to " << pointcloud_msg->header.frame_id);
+      tf_listener_.lookupTransform(
+          goal->mesh_frame, pointcloud_msg->header.frame_id, ros::Time::now() - ros::Duration(1), transform);
     }
-    catch (tf::TransformException ex){
-      ROS_ERROR("%s",ex.what());
+    catch (tf::TransformException ex)
+    {
+      ROS_ERROR("%s", ex.what());
       result_.status_msg = ex.what();
       as_.setAborted(result_);
       return;
