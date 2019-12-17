@@ -27,8 +27,7 @@
 
 import json
 import os        
-from src_python.pcs_detection.process import validate
-
+from pcs_detection.process import validate, demo_video
 
 class Config:
     def __init__(self, **entries):
@@ -37,11 +36,14 @@ class Config:
 if __name__ == '__main__':
     # Import Config json file and convert into format we need
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    with open(dir_path + '/data/weights/<weight_path>/full_config.json') as json_data_file:
+    with open(dir_path + '<path to saved off json>') as json_data_file:
         data = json.load(json_data_file)
     config = Config(**data)
  
     if 'VAL_WEIGHT_PATH' in config.__dict__.keys():
-        validate(config)
+        if config.MODE == 'VALIDATE':
+            validate(config)
+        elif config.MODE == 'VIDEO':
+            demo_video(config)
     else:
         print('This config does not have an associated weight file')

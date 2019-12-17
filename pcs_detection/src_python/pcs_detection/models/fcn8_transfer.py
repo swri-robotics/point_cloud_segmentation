@@ -1,9 +1,9 @@
 '''
  * @file fcn8_model.py 
- * @brief Standard version of fcn8 with added batch normalization
+ * @brief VGG16 as the backbone for fcn8. VGG16 imports the image net weights. All input images must have 3 channels.
  *
  * @author Jake Janssen
- * @date Oct 24, 2019
+ * @date Dec 17, 2019
  * @version TODO
  * @bug No known bugs
  *
@@ -33,16 +33,20 @@ from tensorflow.keras.layers import Activation, Lambda, Add, MaxPooling2D, Dropo
 from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling1D, UpSampling1D, Flatten, Reshape, Permute, Conv1D
 from tensorflow.keras.layers import Conv2DTranspose, Input, BatchNormalization
 from tensorflow.keras import optimizers
-
+from tensorflow.keras.applications.vgg16 import VGG16
 
 class fcn8():
+    '''
+    fcn8 with VGG weights transfered from the imagenet challenge.
+    Inputs must be RGB.
+    '''
     def __init__(self, config):
         self.model = None
-        self.config = config 
+        self.config = config
         if self.config.MODE in ['VALIDATE', 'VIDEO']:
             self.val = True
         else:
-            self.val = False
+            self.val = False 
 
     def IoU(self, y_true, y_pred):
         nb_classes = K.int_shape(y_pred)[-1]
@@ -126,9 +130,9 @@ class fcn8():
         # number of classes +1 for background
         num_class = len(self.config.CLASS_NAMES) + 1
         
-        if self.config.CHANNEL == 'RGB' or self.config.CHANNEL == 'LAB' or self.config.CHANNEL == 'YCR_CB' or self.config.CHANNEL == 'HSV':
+        if self.config.CHANNEL == 'RGB' or self.config.CHANNEL == 'LAB' or self.config.CHANNEL == 'YCR_CB' or self.config.CHANNEL == 'HSV' or self.config.CHANNEL == 'GREY':
             num_channels = 3
-        elif self.config.CHANNEL == 'THERMAL' or self.config.CHANNEL == 'GREY' or self.config.CHANNEL == 'STACKED' or self.config.CHANNEL == 'CLAHE':
+        elif self.config.CHANNEL == 'THERMAL' or self.config.CHANNEL == 'STACKED':
             num_channels = 1
         elif self.config.CHANNEL == 'COMBINED':
             num_channels = 2
@@ -144,159 +148,29 @@ class fcn8():
         else:
             h, w = self.config.IMG_DIMS
         
-        # layers of neural net 
+        # Create input layer to feed into VGG
+        # this layers must be >48,>48,3
         input_image = Input(shape=(h,
                                    w,
-                                   num_channels))
+                                   num_channels), name='input_image')
 
-        conv1_1a = Conv2D(64, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv1_1a')(input_image)
+        # use imagenet weights and create model
+        model_vgg16_conv = VGG16(weights='imagenet', include_top=False, input_tensor=input_image, input_shape=(h,w,num_channels))
 
-        conv1_2 = Conv2D(64, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv1_2')(conv1_1a)
+        # freeze the first five layers of VGG
+        #for layer in model_vgg16_conv.layers: #.layers[0:2]:   #model_vgg16_conv.layers[0:5]:
+        #    layer.trainable = False
 
-        x = BatchNormalization()(conv1_2)
-        
-        pool1 = MaxPooling2D(pool_size=(2, 2), 
-                            strides=(2,2), 
-                            padding='same', 
-                            name='pool1')(x)
-        
-        conv2_1 = Conv2D(128, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv2_1')(pool1)
+        output_vgg16_conv = model_vgg16_conv(input_image)
 
-        conv2_2 = Conv2D(128, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv2_2')(conv2_1)
-        
-        x = BatchNormalization()(conv2_2)
-
-        pool2 = MaxPooling2D(pool_size=(2, 2), 
-                            strides=(2,2), 
-                            padding='same', 
-                            name='pool2')(x)
-        
-        
-        conv3_1 = Conv2D(256, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func,
-                        kernel_initializer=kernel_initializer, 
-                        name='conv3_1')(pool2)
-
-        conv3_2 = Conv2D(256, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv3_2')(conv3_1)
-
-        conv3_3 = Conv2D(256, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv3_3')(conv3_2)
-
-        x = BatchNormalization()(conv3_3)
-        
-        pool3 = MaxPooling2D(pool_size=(2, 2), 
-                            strides=(2,2), 
-                            padding='same', 
-                            name='pool3')(x)
-    
-        conv4_1 = Conv2D(512, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv4_1')(pool3)
-
-        conv4_2 = Conv2D(512, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv4_2')(conv4_1)
-
-        conv4_3 = Conv2D(512, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func,
-                        kernel_initializer=kernel_initializer, 
-                        name='conv4_3')(conv4_2)
-        
-        x = BatchNormalization()(conv4_3)
-        
-        pool4 = MaxPooling2D(pool_size=(2, 2), 
-                            strides=(2,2), 
-                            padding='same', 
-                            name='pool4')(x)
-
-        
-        conv5_1 = Conv2D(512, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func,
-                        kernel_initializer=kernel_initializer,
-                        name='conv5_1')(pool4)
-
-        conv5_2 = Conv2D(512, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv5_2')(conv5_1)
-
-        conv5_3 = Conv2D(512, 
-                        kernel_size=(3,3), 
-                        strides=(1,1),
-                        padding='same', 
-                        activation=act_func, 
-                        kernel_initializer=kernel_initializer,
-                        name='conv5_3')(conv5_2)
-
-        x = BatchNormalization()(conv5_3)
-        
-        pool5 = MaxPooling2D(pool_size=(2, 2), 
-                        strides=(2,2), 
-                        padding='same', 
-                        name='pool5')(x)
-
+        # begin classification
         fc6 = Conv2D(4096, 
                     kernel_size=(7,7), 
                     strides=(1,1), 
                     padding='same', 
                     activation=act_func,
                     kernel_initializer=kernel_initializer, 
-                    name='fc6')(pool5)
+                    name='fc6')(output_vgg16_conv)
 
         drop6 = Dropout(0.5)(fc6)
 
@@ -330,8 +204,8 @@ class fcn8():
                             padding='same', 
                             activation=act_func, 
                             kernel_initializer=kernel_initializer,
-                            name='score_pool4n')(pool4)
-
+                            name='score_pool4n')(model_vgg16_conv.get_layer("block4_pool").output)
+                            
         try:
             fuse_pool4 = Add()([upscore2n, score_pool4])
         except:
@@ -350,19 +224,17 @@ class fcn8():
                             padding='same', 
                             activation=act_func, 
                             kernel_initializer=kernel_initializer,
-                            name='score_pool3n')(pool3)
-        try:
-            fuse_pool3 = Add()([upscore_pool4, score_pool3n])
-        except:
-            fuse_pool3 = Add()([upscore_pool4, score_pool3n])
-
+                            name='score_pool3n')(model_vgg16_conv.get_layer("block3_pool").output)
         
+        fuse_pool3 = Add()([upscore_pool4, score_pool3n])
+
         upscore8n = Conv2DTranspose(num_class, kernel_size=(16,16), strides=(8, 8), 
                 padding='same', name='upscore8n', activation='linear')(fuse_pool3)
 
         upscore_out = Activation('softmax')(upscore8n)
 
         model = Model(input_image, upscore8n)
+        model.summary()
 
         if not self.val:
             # use sgd for optimizer (could try adam too)
@@ -377,7 +249,6 @@ class fcn8():
         self.model = model
 
         if self.val:
-            #print("[INFO] Loading {0}".format(val_weights))
             try:
                 model.load_weights(self.config.VAL_WEIGHT_PATH)
                 print("[INFO] Loded Model Weights {0}".format(self.config.VAL_WEIGHT_PATH))
