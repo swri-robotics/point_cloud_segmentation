@@ -27,14 +27,15 @@ import numpy as np
 from pcs_detection.preprocess import preprocessing
 
 import tensorflow as tf
-import keras.backend as K
+import tensorflow.keras.backend as K
 
 
 class Inference():
     '''
     Edits the config bas ded on the validation weights and builds the model
     '''
-    def __init__(self, config):                
+    def __init__(self, config):
+
         self.config=config 
 
         # evaluate the full image regardless of what is in config 
@@ -48,9 +49,21 @@ class Inference():
 
         # load in the model
         if config.MODEL == 'fcn8':
-            from pcs_detection.models.fcn8_model import fcn8
-        elif config.MODEL == 'fcn_reduced':
-            from pcs_detection.models.fcn8_reduced import fcn8
+            from src_python.pcs_detection.models.fcn8_model import fcn8
+        elif config.MODEL == 'fcn_transfer':
+            from src_python.pcs_detection.models.fcn8_transfer import fcn8
+
+        # Save the graph and session so it can be set if make_prediction is in another thread
+        self.graph = tf.get_default_graph()
+        cfg = tf.ConfigProto()
+        # This allows GPU memory to dynamically grow. This is a workaround to fix this issue on RTX cards
+        # https://github.com/tensorflow/tensorflow/issues/24496
+        # However, this can be problematic when sharing memory between applications.
+        # TODO: Check and see if issue 24496 has been closed, and change this. Note that since Tensorflow 1.15
+        # is the final 1.x release, this might never happen until this code is upgraded to tensorflow 2.x
+        cfg.gpu_options.allow_growth = True
+        cfg.log_device_placement = False
+        self.session = tf.Session(config = cfg)
 
         # Save the graph and session so it can be set if make_prediction is in another thread
         self.graph = tf.get_default_graph()
@@ -68,10 +81,8 @@ class Inference():
         K.set_session(self.session)
         weldDetector = fcn8(self.config)
         # load weights into the model file
-        weldDetector.build_model(val=True, val_weights = self.config.VAL_WEIGHT_PATH)
-
+        weldDetector.build_model()
         self.model = weldDetector.model
-
         self.model._make_predict_function()
         self.graph.finalize()
 
@@ -79,7 +90,7 @@ class Inference():
 
     def make_prediction(self, img_data_original):
         '''
-        Applies preprocessing, makes a prediction, and converts it to a boolean mask 
+        Applies preprocessing, makes a prediction, and converts it 1d mask of target prediction confidence
         Returns np array of size img_height x img_width
         '''
         img_data_original = img_data_original.astype(np.float32)
@@ -99,11 +110,23 @@ class Inference():
 
         # make a prediction and convert it to a boolean mask
         with self.session.as_default():
-          with self.graph.as_default():
-            prediction = self.model.predict(img_data)
-        prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
-        prediction = (np.argmax(prediction,axis=-1)).astype(np.uint8)
-        prediction = prediction[0]
-
-        return prediction
+            with self.graph.as_default():
+                prediction = self.model.predict(img_data)
         
+        prediction = prediction[0]
+        prediction[:,:,0] += self.config.CONFIDENCE_THRESHOLD
+
+        # normalize between 0 and 1
+        prediction = prediction/self.config.PREDICTION_MAX_RANGE + 0.5
+
+        # get the max value of the prediction
+        val_prediction = np.max(prediction,axis=-1)
+
+        # confidence score is based on the difference between the max target prediction and max background prediciton
+        val_prediction -= np.max(prediction[:,:,0:(len(config.BACKGROUND_CLASS_NAMES)+1)], axis=-1)
+
+        # clip any abnormally strong predicitons 
+        val_prediction[val_prediction > 1] = 1
+        val_prediction[val_prediction < 0] = 0
+
+        return val_prediction
