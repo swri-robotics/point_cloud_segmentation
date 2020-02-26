@@ -8,18 +8,22 @@
 
   <license>Apache 2.0</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <depend>pcl_conversions</depend>
-  <depend>pcl_ros</depend>
-  <depend>roscpp</depend>
-  <depend>sensor_msgs</depend>
-  <depend>cv_bridge</depend>
-  <depend>pcs_detection</depend>
-  <depend>pcs_msgs</depend>
-  <depend>pcs_scan_integration</depend>
-  <depend>message_runtime</depend>
+  <buildtool_depend condition="$ROS_VERSION == 1"> catkin</buildtool_depend>
+  <depend condition="$ROS_VERSION == 1">pcl_conversions</depend>
+  <depend condition="$ROS_VERSION == 1">pcl_ros</depend>
+  <depend condition="$ROS_VERSION == 1">roscpp</depend>
+  <depend condition="$ROS_VERSION == 1">sensor_msgs</depend>
+  <depend condition="$ROS_VERSION == 1">cv_bridge</depend>
+  <depend condition="$ROS_VERSION == 1">pcs_detection</depend>
+  <depend condition="$ROS_VERSION == 1">pcs_msgs</depend>
+  <depend condition="$ROS_VERSION == 1">pcs_scan_integration</depend>
+  <depend condition="$ROS_VERSION == 1">message_runtime</depend>
 
-  <exec_depend>python-opencv</exec_depend>
-  <exec_depend>rospy</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">python-opencv</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">rospy</exec_depend>
 
+  <export>
+    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+    <build_type condition="$ROS_VERSION == 2">cmake</build_type>
+  </export>
 </package>

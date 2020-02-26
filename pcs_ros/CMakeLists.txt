@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(pcs_ros)
 
+if ($ENV{ROS_VERSION} VERSION_EQUAL "1")
+message(STATUS "ROS 1 found. Building pcs_ros")
+
 add_compile_options(-std=c++11)
 
 find_package(pcs_scan_integration REQUIRED)
@@ -115,3 +118,4 @@ target_link_libraries(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node ${catkin_L
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+endif()
