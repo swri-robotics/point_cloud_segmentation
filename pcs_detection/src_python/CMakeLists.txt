@@ -18,5 +18,8 @@ if (PYTHONINTERP_FOUND)
                        DEPENDS ${DEPS})
 
     add_custom_target(target ALL DEPENDS ${OUTPUT})
+    # ROS 1 (At least until Noetic)
     install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --install-lib ${CMAKE_INSTALL_PREFIX}/lib/python2.7/dist-packages)")
+    # ROS 2
+    install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --install-lib ${CMAKE_INSTALL_PREFIX}/lib/python3.6/site-packages)")
 endif()
