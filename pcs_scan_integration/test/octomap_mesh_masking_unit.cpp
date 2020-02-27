@@ -167,8 +167,8 @@ TEST_F(OctomapMeshMaskUnit, maskMesh)
       CONSOLE_BRIDGE_logDebug("Saving file to data directory");
     }
     tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
-    EXPECT_EQ(results->getVertices()->size(), 5928);
-    EXPECT_EQ(results->getTriangles()->size(), 1976 * 4);
+    EXPECT_EQ(results->getVertices()->size(), 5925);
+    EXPECT_EQ(results->getTriangles()->size(), 1975 * 4);
   }
   {
     EXPECT_TRUE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_OUTSIDE));
