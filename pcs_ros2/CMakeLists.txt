@@ -26,9 +26,11 @@ find_package(pcs_scan_integration REQUIRED)
 find_package(pcs_detection REQUIRED)
 find_package(pcs_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
-#find_package(pcl_ros REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
 find_package(OpenCV 3 REQUIRED)
 
 ###########
@@ -47,9 +49,12 @@ find_package(OpenCV 3 REQUIRED)
 #add_dependencies(${PROJECT_NAME}_image_extractor_node ${catkin_EXPORTED_TARGETS})
 #target_link_libraries(${PROJECT_NAME}_image_extractor_node ${catkin_LIBRARIES} pcs::pcs_detection_hsv_thresholding)
 
-#add_executable(${PROJECT_NAME}_octomap_mesh_mask_node src/octomap_mesh_mask_node.cpp)
-#add_dependencies(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(${PROJECT_NAME}_octomap_mesh_mask_node ${catkin_LIBRARIES} pcs::pcs_scan_integration_octomap_mesh_masking )
+add_executable(${PROJECT_NAME}_octomap_mesh_mask_node src/octomap_mesh_mask_node.cpp)
+ament_target_dependencies(${PROJECT_NAME}_octomap_mesh_mask_node rclcpp rclcpp_action cv_bridge pcs_msgs tf2_ros)
+target_link_libraries(${PROJECT_NAME}_octomap_mesh_mask_node pcs::pcs_scan_integration_octomap_mesh_masking)
+target_include_directories(${PROJECT_NAME}_octomap_mesh_mask_node PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>")
 
 #add_executable(${PROJECT_NAME}_point_cloud_annotator_node src/point_cloud_annotator_node.cpp)
 #add_dependencies(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_EXPORTED_TARGETS})
@@ -74,24 +79,20 @@ install(DIRECTORY config
   PATTERN ".svn" EXCLUDE
 )
 
-#ament_python_install_package(src/)
-
-#install(
-#  TARGETS
-#    ${PROJECT_NAME}_panels
-#    ${PROJECT_NAME}_widgets
-#    ${PROJECT_NAME}_area_selection_demo
-#    ${PROJECT_NAME}_part_selection_demo
-#    ${PROJECT_NAME}_crs_application_demo
-#    ${PROJECT_NAME}_state_machine_interface_demo
-#  EXPORT ${PACKAGE_NAME}-targets
-#  LIBRARY DESTINATION lib
-#  ARCHIVE DESTINATION lib
-#  RUNTIME DESTINATION lib/${PROJECT_NAME}
-#  INCLUDES DESTINATION include
-#)
-
-#ament_export_interfaces(${PACKAGE_NAME}-targets)
+install(
+  TARGETS
+#    ${PROJECT_NAME}_hsv_thresholding_node
+#    ${PROJECT_NAME}_image_channel_splitter_node
+#    ${PROJECT_NAME}_image_extractor_node
+    ${PROJECT_NAME}_octomap_mesh_mask_node
+#    ${PROJECT_NAME}_point_cloud_annotator_node
+  EXPORT ${PACKAGE_NAME}-targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  INCLUDES DESTINATION include
+)
+ament_export_interfaces(${PACKAGE_NAME}-targets)
 
 
 #############
