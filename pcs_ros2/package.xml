@@ -16,6 +16,7 @@
   <depend condition="$ROS_VERSION == 2">pcl_conversions</depend>
   <depend condition="$ROS_VERSION == 1">rclcpp</depend>
   <depend condition="$ROS_VERSION == 2">sensor_msgs</depend>
+  <depend condition="$ROS_VERSION == 2">std_srvs</depend>
   <depend condition="$ROS_VERSION == 2">cv_bridge</depend>
   <depend condition="$ROS_VERSION == 2">pcs_detection</depend>
   <depend condition="$ROS_VERSION == 2">pcs_msgs</depend>

@@ -29,6 +29,7 @@ find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(OpenCV 3 REQUIRED)
@@ -56,9 +57,14 @@ target_include_directories(${PROJECT_NAME}_octomap_mesh_mask_node PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include>")
 
-#add_executable(${PROJECT_NAME}_point_cloud_annotator_node src/point_cloud_annotator_node.cpp)
-#add_dependencies(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(${PROJECT_NAME}_point_cloud_annotator_node ${catkin_LIBRARIES} pcs::pcs_detection_point_cloud_annotator)
+add_executable(${PROJECT_NAME}_point_cloud_annotator_node src/point_cloud_annotator_node.cpp)
+ament_target_dependencies(${PROJECT_NAME}_point_cloud_annotator_node cv_bridge rclcpp rclcpp_action cv_bridge pcs_msgs tf2_ros std_srvs)
+target_link_libraries(${PROJECT_NAME}_point_cloud_annotator_node pcs::pcs_detection_point_cloud_annotator)
+target_include_directories(${PROJECT_NAME}_point_cloud_annotator_node PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>")
+target_include_directories(${PROJECT_NAME}_point_cloud_annotator_node SYSTEM PUBLIC
+    ${cv_bridge_INCLUDE_DIRS})
 
 #add_executable(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node src/point_cloud_xyzi_to_xyzrgb_node.cpp)
 #add_dependencies(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node ${catkin_EXPORTED_TARGETS})
@@ -85,7 +91,7 @@ install(
 #    ${PROJECT_NAME}_image_channel_splitter_node
 #    ${PROJECT_NAME}_image_extractor_node
     ${PROJECT_NAME}_octomap_mesh_mask_node
-#    ${PROJECT_NAME}_point_cloud_annotator_node
+    ${PROJECT_NAME}_point_cloud_annotator_node
   EXPORT ${PACKAGE_NAME}-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
