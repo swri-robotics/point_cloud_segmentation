@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 #find_package(PCL 1.8 REQUIRED)
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 #catkin_python_setup()
 
