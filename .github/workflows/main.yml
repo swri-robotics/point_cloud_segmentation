@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 5 * * *'
+
+jobs:
+  industrial_ci:
+    name: ${{ matrix.env.CI_NAME }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - {CI_NAME: Clang-Format,
+             OS_NAME: ubuntu,
+             OS_CODE_NAME: bionic,
+             ROS_DISTRO: melodic,
+             ROS_REPO: main,
+             ROSDEP_SKIP_KEYS: "bullet3 fcl",
+             CLANG_FORMAT_CHECK: file,
+             CLANG_FORMAT_VERSION: 8}
+          - {CI_NAME: Focal-Build,
+             OS_NAME: ubuntu,
+             OS_CODE_NAME: focal,
+             ROS_DISTRO: noetic,
+             ROS_REPO: main,
+             UPSTREAM_WORKSPACE: 'dependencies.rosinstall',
+             ADDITIONAL_DEBS: 'libompl-dev',
+             ROSDEP_SKIP_KEYS: "bullet3 fcl ompl orocos_kdl python-numpy python-opencv ifopt python descartes_opw descartes_samplers descartes_light opw_kinematics",
+             CCACHE_DIR: "/home/runner/work/pcs/pcs/Focal-Build/.ccache",
+             PARALLEL_TESTS: false,
+             BEFORE_RUN_TARGET_TEST_EMBED: "source /root/target_ws/install/setup.bash",
+             UPSTREAM_CMAKE_ARGS: "-DCMAKE_BUILD_TYPE=Release",
+             TARGET_CMAKE_ARGS: "-DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTS=ON"}
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Free Disk Space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq)
+          df -h
+
+      - name: Prepare ccache timestamp
+        id: ccache_cache_timestamp
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+          message("::set-output name=timestamp::${current_date}")
+
+      - name: ccache cache files
+        uses: actions/cache@v1.1.0
+        with:
+          path: ${{ matrix.env.CI_NAME }}/.ccache
+          key: ${{ matrix.env.CI_NAME }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ matrix.env.CI_NAME }}-ccache-
+
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}

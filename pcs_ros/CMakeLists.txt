@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(pcs_ros)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(pcs_scan_integration REQUIRED)
 find_package(pcs_detection REQUIRED)
@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 #find_package(PCL 1.8 REQUIRED)
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 #catkin_python_setup()
 

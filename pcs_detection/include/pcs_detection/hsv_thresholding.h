@@ -52,7 +52,7 @@ inline bool hsvThresholdingDetector(const cv::Mat& input_image, cv::Mat& mask, b
   const int value_upper = 150;
 
   cv::Mat hsv_image;
-  cv::cvtColor(input_image, hsv_image, CV_BGR2HSV);
+  cv::cvtColor(input_image, hsv_image, cv::COLOR_BGR2HSV);
   inRange(hsv_image,
           cv::Scalar(hue_lower, saturation_lower, value_lower),
           cv::Scalar(hue_upper, saturation_upper, value_upper),
