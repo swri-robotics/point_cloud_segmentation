@@ -1,7 +1,7 @@
 # Descartes Light
 - git: {local-name: descartes_light, uri: 'https://github.com/swri-robotics/descartes_light.git', version: master}
 
-# IFOPT: Used by TrajOpt
+# IFOPT- Used by TrajOpt
 - git: {local-name: ifopt, uri: https://github.com/ethz-adrl/ifopt.git, version: master}
 
 # OPW Kinematics
