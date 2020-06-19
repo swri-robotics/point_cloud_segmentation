@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(pcs_ros)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(pcs_scan_integration REQUIRED)
 find_package(pcs_detection REQUIRED)
