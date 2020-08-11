@@ -410,7 +410,8 @@ class fcn8():
 
 
 
-        if not val:
+        #if not val:
+        if True:
             # use sgd for optimizer (could try adam too)
             sgd = optimizers.SGD(lr=self.config.LEARNING_RATE['start'], momentum=0.9)
             model.compile(

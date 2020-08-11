@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 from pcs_detection.histogram_backprojection import HistogramBackprojection

@@ -27,7 +27,11 @@ import numpy as np
 from pcs_detection.preprocess import preprocessing
 
 import tensorflow as tf
-import keras.backend as K
+
+#from keras import backend as K
+from tensorflow.keras import backend as K
+# from tensorflow.python.keras import backend as K
+# import keras.backend as K 
 
 
 class Inference():
@@ -53,8 +57,10 @@ class Inference():
             from pcs_detection.models.fcn8_reduced import fcn8
 
         # Save the graph and session so it can be set if make_prediction is in another thread
-        self.graph = tf.get_default_graph()
-        cfg = tf.ConfigProto()
+        # self.graph = tf.get_default_graph()
+        self.graph = tf.compat.v1.get_default_graph()
+        # cfg = tf.ConfigProto()
+        cfg = tf.compat.v1.ConfigProto() 
         # This allows GPU memory to dynamically grow. This is a workaround to fix this issue on RTX cards
         # https://github.com/tensorflow/tensorflow/issues/24496
         # However, this can be problematic when sharing memory between applications.
@@ -62,17 +68,19 @@ class Inference():
         # is the final 1.x release, this might never happen until this code is upgraded to tensorflow 2.x
         cfg.gpu_options.allow_growth = True
         cfg.log_device_placement = False
-        self.session = tf.Session(config = cfg)
-
+        # self.session = tf.Session(config = cfg)
+        self.session = tf.compat.v1.Session(config = cfg)
         # create the model
-        K.set_session(self.session)
-        weldDetector = fcn8(self.config)
+        #K.set_session(self.session)
+        tf.compat.v1.keras.backend.set_session(self.session)
+
+        maskDetector = fcn8(self.config)
         # load weights into the model file
-        weldDetector.build_model(val=True, val_weights = self.config.VAL_WEIGHT_PATH)
+        maskDetector.build_model(val=True, val_weights = self.config.VAL_WEIGHT_PATH, )
 
-        self.model = weldDetector.model
+        self.model = maskDetector.model
 
-        self.model._make_predict_function()
+        #self.model._make_predict_function()
         self.graph.finalize()
 
         print("Model loaded and ready")

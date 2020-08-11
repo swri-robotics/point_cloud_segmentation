@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
  * @file fcn8_node.py
  * @brief This node exposes a service interface to perform FCN8 inference.
