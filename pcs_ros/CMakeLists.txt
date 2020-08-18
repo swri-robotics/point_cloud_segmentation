@@ -70,6 +70,12 @@ target_link_libraries(${PROJECT_NAME}_point_cloud_xyzi_to_xyzrgb_node ${catkin_L
 #############
 ## Install ##
 #############
+
+catkin_install_python(
+  PROGRAMS src/fcn8_node
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
  install(PROGRAMS
    src/histogram_backprojection_node
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
