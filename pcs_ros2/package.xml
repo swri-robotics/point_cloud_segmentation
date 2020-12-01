@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pcs_ros2</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="powelson.matthew@gmail.com">ros-industrial</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+
+  <test_depend condition="$ROS_VERSION == 2">ament_lint_auto</test_depend>
+  <test_depend condition="$ROS_VERSION == 2">ament_lint_common</test_depend>
+
+  <!-- TODO: Go through this list and remove non ROS 2 -->
+  <depend condition="$ROS_VERSION == 2">pcl_conversions</depend>
+  <depend condition="$ROS_VERSION == 1">rclcpp</depend>
+  <depend condition="$ROS_VERSION == 2">sensor_msgs</depend>
+  <depend condition="$ROS_VERSION == 2">std_srvs</depend>
+  <depend condition="$ROS_VERSION == 2">cv_bridge</depend>
+  <depend condition="$ROS_VERSION == 2">pcs_detection</depend>
+  <depend condition="$ROS_VERSION == 2">pcs_msgs</depend>
+  <depend condition="$ROS_VERSION == 2">pcs_scan_integration</depend>
+  <depend condition="$ROS_VERSION == 2">tf2_eigen</depend>
+  <depend condition="$ROS_VERSION == 2">tf2_ros</depend>
+
+  <exec_depend condition="$ROS_VERSION == 2">python-opencv</exec_depend>
+  <exec_depend condition="$ROS_VERSION == 1">rclpy</exec_depend>
+
+<export>
+  <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+  <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+</export>
+</package>
