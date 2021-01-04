@@ -1,5 +1,5 @@
 # Descartes Light
-- git: {local-name: descartes_light, uri: 'https://github.com/swri-robotics/descartes_light.git', version: master}
+- git: {local-name: descartes_light, uri: 'https://github.com/swri-robotics/descartes_light.git', version: feature/CommandLanguage}
 
 # IFOPT- Used by TrajOpt
 - git: {local-name: ifopt, uri: https://github.com/ethz-adrl/ifopt.git, version: master}
@@ -8,13 +8,13 @@
 - git: {local-name: opw_kinematics, uri: 'https://github.com/Jmeyer1292/opw_kinematics.git', version: master}
 
 # Tesseract
-- git: {local-name: tesseract, uri: 'https://github.com/ros-industrial-consortium/tesseract.git', version: master}
+- git: {local-name: tesseract, uri: 'https://github.com/ros-industrial-consortium/tesseract.git', version: feature/CommandLanguage}
 
 # Tesseract External (Bullet)
 - git: {local-name: tesseract_ext, uri: 'https://github.com/ros-industrial-consortium/tesseract_ext.git', version: master}
 
 # Trajopt
-- git: {local-name: trajopt_ros, uri: 'https://github.com/ros-industrial-consortium/trajopt_ros.git', version: master}
+- git: {local-name: trajopt_ros, uri: 'https://github.com/ros-industrial-consortium/trajopt_ros.git', version: feature/CommandLanguage}
 
 # Octomap Mapping
 - git: {local-name: octomap_mapping, uri: 'https://github.com/OctoMap/octomap_mapping.git', version: kinetic-devel}
