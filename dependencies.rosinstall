@@ -18,3 +18,6 @@
 
 # Octomap Mapping
 - git: {local-name: octomap_mapping, uri: 'https://github.com/OctoMap/octomap_mapping.git', version: kinetic-devel}
+
+# CMkae Common Scripts
+- git: {local-name: cmake_common_scripts, uri: 'https://github.com/ros-industrial/cmake_common_scripts.git', version: master}
