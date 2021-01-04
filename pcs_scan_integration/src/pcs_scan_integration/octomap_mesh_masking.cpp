@@ -140,7 +140,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
 
   // Set the active collision objects and transforms
   checker.setActiveCollisionObjects({ "octomap_link", "mesh_link" });
-  checker.setContactDistanceThreshold(0.0);
+  checker.setDefaultCollisionMarginData(0.0);
 
   tesseract_common::TransformMap location;
   location["octomap_link"] = Eigen::Isometry3d::Identity();
