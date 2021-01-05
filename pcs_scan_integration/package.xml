@@ -8,6 +8,8 @@
 
   <license>Apache 2.0</license>
 
+  <build_depend>cmake_common_scripts</build_depend>
+
   <depend>tesseract_collision</depend>
   <depend>libconsole-bridge-dev</depend>
 

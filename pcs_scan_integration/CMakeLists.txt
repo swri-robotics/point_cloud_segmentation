@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(pcs_scan_integration VERSION 0.1.0 LANGUAGES CXX)
+
+# Extract package name and version
+find_package(cmake_common_scripts REQUIRED)
+extract_package_metadata(pkg)
+project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
 
 find_package(console_bridge REQUIRED)
 find_package(PCL REQUIRED)
 find_package(tesseract_collision REQUIRED)
-
-list(FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_11 CXX_FEATURE_FOUND)
 
 ###########
 ## Build ##
@@ -14,32 +16,22 @@ list(FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_11 CXX_FEATURE_FOUND)
 add_library(${PROJECT_NAME}_octomap_mesh_masking src/${PROJECT_NAME}/octomap_mesh_masking.cpp)
 target_link_libraries(${PROJECT_NAME}_octomap_mesh_masking tesseract::tesseract_collision_bullet console_bridge ${PCL_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_octomap_mesh_masking PUBLIC -Wsuggest-override -Wconversion -Wsign-conversion)
-if(CXX_FEATURE_FOUND EQUAL "-1")
-    target_compile_options(${PROJECT_NAME}_octomap_mesh_masking PUBLIC -std=c++11)
-else()
-    target_compile_features(${PROJECT_NAME}_octomap_mesh_masking PRIVATE cxx_std_11)
-endif()
+target_cxx_version(${PROJECT_NAME}_octomap_mesh_masking INTERFACE VERSION 11)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${PROJECT_NAME}_octomap_mesh_masking PUBLIC -mno-avx)
-  else()
-    message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
-  endif()
+  target_compile_options(${PROJECT_NAME}_octomap_mesh_masking PUBLIC -mno-avx)
+else()
+  message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+endif()
 target_include_directories(${PROJECT_NAME}_octomap_mesh_masking PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include>")
 target_include_directories(${PROJECT_NAME}_octomap_mesh_masking SYSTEM PUBLIC
     ${PCL_INCLUDE_DIRS})
 
-list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_octomap_mesh_masking)
-
 #############
 ## Install ##
 #############
-# Mark executables and/or libraries for installation
-install(TARGETS ${PACKAGE_LIBRARIES}
-    EXPORT ${PROJECT_NAME}-targets DESTINATION lib)
-install(EXPORT ${PROJECT_NAME}-targets
-    NAMESPACE pcs:: DESTINATION lib/cmake/${PROJECT_NAME})
+configure_package(NAMESPACE pcs TARGETS ${PROJECT_NAME}_octomap_mesh_masking)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}
@@ -50,34 +42,9 @@ install(DIRECTORY include/${PROJECT_NAME}
     PATTERN ".svn" EXCLUDE
  )
 
-install(FILES package.xml DESTINATION share/${PROJECT_NAME})
-
-# Create cmake config files
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/${PROJECT_NAME}-config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
-    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
-
-write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
-    VERSION ${PROJECT_VERSION} COMPATIBILITY ExactVersion)
-
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-    DESTINATION lib/cmake/${PROJECT_NAME})
-
-export(EXPORT ${PROJECT_NAME}-targets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake)
-
 if (ENABLE_TESTS)
   enable_testing()
-  add_custom_target(run_tests ALL
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      COMMAND ${CMAKE_CTEST_COMMAND} -V -O "/tmp/${PROJECT_NAME}_ctest.log" -C ${CONFIGURATION})
-
+  add_run_tests_target(ENABLE ${PCS_ENABLE_RUN_TESTS})
   add_subdirectory(test)
 endif()
 

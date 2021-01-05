@@ -30,7 +30,9 @@ catkin_package(
     pcs_msgs
     roscpp
     sensor_msgs
-#  DEPENDS
+  DEPENDS
+    pcs_detection
+    pcs_scan_integration
 )
 
 ###########

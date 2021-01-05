@@ -8,6 +8,8 @@
 
   <license>Apache 2.0</license>
 
+  <build_depend>cmake_common_scripts</build_depend>
+
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-opencv</exec_depend>
   <depend>libconsole-bridge-dev</depend>
