@@ -8,7 +8,7 @@
 - git: {local-name: opw_kinematics, uri: 'https://github.com/Jmeyer1292/opw_kinematics.git', version: master}
 
 # Tesseract
-- git: {local-name: tesseract, uri: 'https://github.com/ros-industrial-consortium/tesseract.git', version: feature/CommandLanguage}
+- git: {local-name: tesseract, uri: 'https://github.com/Levi-Armstrong/tesseract-1.git', version: feature/CommandLanguage}
 
 # Tesseract External (Bullet)
 - git: {local-name: tesseract_ext, uri: 'https://github.com/ros-industrial-consortium/tesseract_ext.git', version: master}
