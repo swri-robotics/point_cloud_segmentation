@@ -157,7 +157,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
   const tesseract_collision::CollisionShapesConst& geom = checker.getCollisionObjectGeometries("mesh_link");
   const auto& mesh2 = std::static_pointer_cast<const tesseract_geometry::Mesh>(geom.at(0));
   const auto& mesh_vertices = mesh2->getVertices();
-  const auto& mesh_triangles = mesh2->getTriangles();
+  const auto& mesh_triangles = mesh2->getFaces();
 
   // ----------- Return correct triangles ------------
   if (mask_type == MaskType::RETURN_COLORIZED)
@@ -180,7 +180,7 @@ bool OctomapMeshMask::maskMesh(const MaskType& mask_type)
           Eigen::Vector3i(255, 0, 0);
     }
     mesh_vertices_color_ = mesh_vertices_color;
-    masked_mesh_ = std::make_shared<tesseract_geometry::Mesh>(input_mesh_->getVertices(), input_mesh_->getTriangles());
+    masked_mesh_ = std::make_shared<tesseract_geometry::Mesh>(input_mesh_->getVertices(), input_mesh_->getFaces());
     return true;
   }
   else if (mask_type == MaskType::RETURN_INSIDE)
@@ -287,6 +287,6 @@ bool OctomapMeshMask::saveMaskedMesh(std::string& filepath)
   return tesseract_collision::writeSimplePlyFile(filepath,
                                                  *(masked_mesh_->getVertices()),
                                                  mesh_vertices_color_,
-                                                 *(masked_mesh_->getTriangles()),
-                                                 masked_mesh_->getTriangleCount());
+                                                 *(masked_mesh_->getFaces()),
+                                                 masked_mesh_->getFaceCount());
 }
