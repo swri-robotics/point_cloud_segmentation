@@ -74,7 +74,7 @@ TEST_F(OctomapMeshMaskUnit, getSet)
     masker.setInputMesh(path);
     auto input_mesh = masker.getInputMesh();
     EXPECT_EQ(input_mesh->getVertices()->size(), 6273);
-    EXPECT_EQ(input_mesh->getTriangles()->size(), 12288 * 4);
+    EXPECT_EQ(input_mesh->getFaces()->size(), 12288 * 4);
   }
   {
     std::string path = std::string(DATA_DIR) + "/box_2m.ply";
@@ -83,7 +83,7 @@ TEST_F(OctomapMeshMaskUnit, getSet)
     masker.setInputMesh(mesh);
     auto input_mesh = masker.getInputMesh();
     EXPECT_EQ(input_mesh->getVertices()->size(), 8);
-    EXPECT_EQ(input_mesh->getTriangles()->size(), 12 * 4);
+    EXPECT_EQ(input_mesh->getFaces()->size(), 12 * 4);
   }
 }
 
@@ -156,7 +156,7 @@ TEST_F(OctomapMeshMaskUnit, maskMesh)
     }
     tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
     EXPECT_EQ(results->getVertices()->size(), 6273);
-    EXPECT_EQ(results->getTriangles()->size(), 12288 * 4);
+    EXPECT_EQ(results->getFaces()->size(), 12288 * 4);
   }
   {
     EXPECT_TRUE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_INSIDE));
@@ -168,7 +168,7 @@ TEST_F(OctomapMeshMaskUnit, maskMesh)
     }
     tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
     EXPECT_EQ(results->getVertices()->size(), 5925);
-    EXPECT_EQ(results->getTriangles()->size(), 1975 * 4);
+    EXPECT_EQ(results->getFaces()->size(), 1975 * 4);
   }
   {
     EXPECT_TRUE(masker.maskMesh(OctomapMeshMask::MaskType::RETURN_OUTSIDE));
@@ -180,7 +180,7 @@ TEST_F(OctomapMeshMaskUnit, maskMesh)
     }
     tesseract_geometry::Mesh::Ptr results = masker.getMaskedMesh();
     EXPECT_EQ(results->getVertices()->size(), 34200);
-    EXPECT_EQ(results->getTriangles()->size(), 11400 * 4);
+    EXPECT_EQ(results->getFaces()->size(), 11400 * 4);
   }
 }
 
