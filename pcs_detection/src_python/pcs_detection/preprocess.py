@@ -34,7 +34,8 @@ def preprocessing(img_data, config):
     '''
 
     # only use the first channel if grey is being used 
-    if config.CHANNEL == 'GREY' and len(img_data.shape) != 2:
+    
+    if config.CHANNEL == 'GREY' and len(img_data.shape) != 2 or config.CHANNEL == 'STACKED' and len(img_data.shape) != 2 or config.CHANNEL == 'CLAHE' and len(img_data.shape) != 2:
         img_data = img_data[:,:,0]
 
     # add third dimension to images with a single channel
@@ -56,6 +57,10 @@ def preprocessing(img_data, config):
         # img_data = cv2.merge(channels)
         # img_data = img_data.astype(np.float32)
         img_data = ycrcb.astype(np.float32)
+    elif config.CHANNEL =='HSV':
+        img_data = cv2.cvtColor(img_data, cv2.COLOR_BGR2HSV)
+        img_data = img_data.astype(np.float32)
+    
     # add the laplacian as a second channel 
     elif config.CHANNEL == 'COMBINED':
         edge_chnl = cv2.GaussianBlur(img_data, (3, 3), 0).astype(np.uint8)
@@ -74,6 +79,12 @@ def preprocessing(img_data, config):
         lap_chnl = cv2.Laplacian(edge_chnl, ddepth, ksize=3 )
         img_data[:,:,0] += 2*lap_chnl
 
+    elif config.CHANNEL == 'CLAHE':
+        clahe = cv2.createCLAHE(clipLimit=10.0,tileGridSize=(3,3))
+        img_data = clahe.apply(img_data.astype(np.uint16))
+        img_data = img_data.astype(np.float32)
+        img_data = np.expand_dims(img_data, axis=-1)
+
     # which mean subtraction values to use 
     if config.CHANNEL == 'RGB':
         dataset_means = config.PRE_PROCESS['rgb']
@@ -90,6 +101,10 @@ def preprocessing(img_data, config):
         dataset_means = config.PRE_PROCESS['lab']
     elif config.CHANNEL == 'YCR_CB':
         dataset_means = config.PRE_PROCESS['ycr']
+    elif config.CHANNEL == 'HSV':
+        dataset_means = config.PRE_PROCESS['hsv']
+    elif config.CHANNEL == 'CLAHE':
+        dataset_means = config.PRE_PROCESS['clahe']
 
     else:
         print('Invalid channel')

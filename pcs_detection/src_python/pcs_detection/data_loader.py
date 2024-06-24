@@ -24,7 +24,7 @@
  * limitations under the License.
  '''
 
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
 import random
 from itertools import cycle
@@ -42,6 +42,7 @@ class dataLoader():
     def __init__(self, config):
         self.config = config
         self.mode = config.MODE
+        self.use_full_image = self.config.USE_FULL_IMAGE
         self.augmentations = config.AUGMENTATIONS
 
         # used for augmentations
@@ -70,7 +71,7 @@ class dataLoader():
         self.data_paths = []
     
         # use either the training or validation sets 
-        if self.mode in ['TRAIN', 'DEBUG']:
+        if self.mode in ['TRAIN', 'DEBUG', 'STATS']:
             data_dirs = self.config.TRAINING_DIRS
             label_name = 'training_labels.xml'
         else:
@@ -81,7 +82,7 @@ class dataLoader():
         for directory in data_dirs:
                         
             data_path = os.path.dirname(os.path.realpath(__file__)).rsplit('/' , 2)[0] + '/scripts/' +  directory['dir_path']
-            
+
             if directory['labels']:
                 label_path = data_path.split("/")[0:-1]
                 label_path.append(label_name)
@@ -96,8 +97,6 @@ class dataLoader():
                 fnames = [fname.split('/')[-1] for fname in fnames]
             else:
                 fnames = os.listdir(data_path)
-                fnames = [data_path + '/' + fname for fname in fnames]
-
 
             if directory['num_imgs'] != 'all':
                 # calculate the number of interval for to get num_imgs of files evenly spaced out
@@ -105,7 +104,7 @@ class dataLoader():
                 # fnames now holds all the files of interest
                 fnames = fnames[::skip_interval]
 
-            print('[Loading] {} paths from {}.'.format(len(fnames),  directory['dir_path'].split('/')[-2]))
+            print('[Loading] {} paths from {}.'.format(len(fnames),  directory['dir_path'].split('/')[-2])) 
 
             # get the full path for file names
             fnames = ['{0}/{1}'.format(data_path, fname) for fname in fnames]
@@ -114,8 +113,10 @@ class dataLoader():
         
 
         # if training or simulating training shuffle the data paths 
-        if self.mode == 'TRAIN' or self.mode == 'TEST_TRAINING_DATA':
+        if self.mode == 'TRAIN' or self.mode == 'DEBUG':
             random.shuffle(self.data_paths)
+        elif self.mode == 'VIDEO':
+            self.data_paths.sort()
 
         self.num_paths = len(self.data_paths)
         print('loaded', self.num_paths, 'images')
@@ -131,12 +132,12 @@ class dataLoader():
 
         # create the background mask
         background_mask = np.zeros((label.shape[0], label.shape[1]),  dtype=np.float32)
-        kernel = np.ones((5,5),np.uint8)
+        kernel = np.ones((3,3),np.uint8)
         bin_label = np.sum(label, axis = -1)
         # convert the image to 2bit so it plays nice with dilate 
         bin_label[bin_label>0] = 1
-        # dialate the label to create the area that will be ignored
-        background_mask = cv2.dilate(bin_label,kernel,iterations = 2)
+        # dialate the label to create the area that will be ignored 
+        background_mask = cv2.dilate(bin_label,kernel,iterations = 1)
         # flip the dialated label to get background
         background_mask = np.where(background_mask>0, 0, 1)
 
@@ -167,11 +168,11 @@ class dataLoader():
         '''
         # get the total amount of labeled pixels in the batch 
         imgs_per_batch = label_batch.shape[0]
-        label_px_batch = np.count_nonzero(label_batch[:, :, :, 1])
+        label_px_batch = np.count_nonzero(label_batch[:, :, :, (len(self.config.BACKGROUND_CLASS_NAMES)+1):])
         background_px_per_img = (label_px_batch/imgs_per_batch) * self.config.BACKGROUND_REDUCTION
 
         # if the whole batch is background then leave then make it all ignore
-        if (label_px_batch == 0) and (self.mode in ['TRAIN', 'TEST_TRAINING_DATA', 'CLASS_METRICS']):
+        if (label_px_batch == 0) and (self.mode in ['TRAIN', 'DEBUG', 'CLASS_METRICS', 'STATS']):
             return None
 
         # if the whole batch is background then leave then make it all ignore
@@ -303,16 +304,17 @@ class dataLoader():
                 except:
                     continue
 
-                if (self.mode not in ['VALIDATION', "DEMO_VIDEO"]) and (self.config.AUGMENTATIONS['brightness_range'] is not None) and (img_data.shape[-1] == 3):
+                # apply the brightness augmentation 
+                if (self.mode not in ['VALIDATION', "VIDEO"]) and (self.config.AUGMENTATIONS['brightness_range'] is not None) and (img_data.shape[-1] == 3):
                     img_data = self.brightness_augmentation(img_data)
 
-                # apply  preprocessing and mean subtraction
+                # apply preprocessing and mean subtraction
                 img_data = preprocessing(img_data, self.config)
                 
                 # genereate the label
                 try:
                     key = file_path.split('/')
-                    key = key[-3] + '/' + key[-1]
+                    key = key[-3] + '/' + key[-1] 
                     label_contours = self.xml_labels[key]
                     label = np.zeros((img_data.shape[0], img_data.shape[1], len(self.config.CLASS_NAMES))).astype(np.float64)
                     for cnt, user_label in enumerate(self.config.CLASS_NAMES):
@@ -332,10 +334,8 @@ class dataLoader():
                     multi_label[:,:,0] = 1
 
                 # pick a random tile from the image
-                if not self.config.USE_FULL_IMAGE:
+                if not self.use_full_image:
                     img_data, multi_label = self.tile_image(img_data, multi_label)
-
-                # add augmented image and label into the batch
 
                 img_batch.append(img_data)
                 label_batch.append(multi_label)
@@ -348,7 +348,7 @@ class dataLoader():
             seed = random.randint(10, 100000)
 
             # create an augmented image and label unless we are validating
-            if self.mode != 'VALIDATE':
+            if self.mode != 'VALIDATE' and self.mode != 'VIDEO':
                 aug_img = next(self.datagen.flow(img_batch, batch_size=self.config.BATCH_SIZE, seed=seed))
                 aug_label = next(self.datagen.flow(label_batch, batch_size=self.config.BATCH_SIZE, seed=seed))
             else:
@@ -361,7 +361,8 @@ class dataLoader():
             aug_label[empty_pixels_mask, -1] = 1
 
             # reduce the number of background pixels
-            aug_label = self.reduce_background_label(aug_label)
+            if self.config.BACKGROUND_REDUCTION is not None:
+                aug_label = self.reduce_background_label(aug_label)
 
             # if None is returned then the whole batch was background 
             if aug_label is None:

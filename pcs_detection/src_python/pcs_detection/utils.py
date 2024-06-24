@@ -42,7 +42,7 @@ def get_labels_from_xml(label_path):
     
     # name of the outer directory this label corresponds to
     # allows for images in different directories to have the same filename 
-    dataset_name = label_path.split('/')[-2]
+    dataset_name = label_path.split('/')[2]
 
     for image_tag in root.iter('image'):
         image = {}
@@ -109,7 +109,7 @@ def dump_inference_config(config):
     '''
     Save a config used for inference in the same folder as the weights.
     '''
-    wanted_keys = ['MODEL', 'VAL_WEIGHT_PATH', 'BATCH_SIZE', 'MODE', 'DISPLAY_SCALE_FACTOR', 'CHANNEL', 'PRE_PROCESS', 'CONFIDENCE_THRESHOLD', 'CLASS_NAMES', 'ORIG_DIMS']
+    wanted_keys = ['MODEL', 'VAL_WEIGHT_PATH', 'BATCH_SIZE', 'MODE', 'DISPLAY_SCALE_FACTOR', 'CHANNEL', 'PRE_PROCESS', 'CONFIDENCE_THRESHOLD', 'TARGET_CLASS_NAMES', 'BACKGROUND_CLASS_NAMES', 'PREDICTION_MAX_RANGE' 'ORIG_DIMS', ]
     config_dump = {}
     for  key in config.__dict__:
         if key in wanted_keys:

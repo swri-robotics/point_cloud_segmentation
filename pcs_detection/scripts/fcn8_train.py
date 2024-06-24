@@ -27,8 +27,7 @@
 
 import json
 import os        
-from pcs_detection.process import test_dataloader, train
-
+from pcs_detection.process import test_dataloader, train, class_analysis
 
 class Config:
     def __init__(self, **entries):
@@ -46,5 +45,7 @@ if __name__ == '__main__':
         test_dataloader(config)
     elif config.MODE == 'TRAIN':
         train(config)
+    elif config.MODE == 'STATS':
+        class_analysis(config)
     else:
         print('Not a valid mode')

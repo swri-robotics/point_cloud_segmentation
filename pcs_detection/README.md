@@ -74,4 +74,3 @@
                     Note: The only directories that should not have labels are the ones that do not contain any instances of the classes.
     Validation_Dirs - same structure as above, these directories will be used for generating validation metrics
         Note: Validation directories with no labels can be run by making the class background
-    
